@@ -4,7 +4,7 @@ import { Profile } from "./Profile.js";
 
 export const Recruiter = sequelize.define("Recruiter", {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-  profileId: { type: DataTypes.UUID, allowNull: false, unique: true, references: { model: Profile, key: "id" } },
+  profileId: { type: DataTypes.UUID, allowNull: false, unique: true, references: { model: Profile, key: "id" } , onDelete: "CASCADE" , onUpdate: "CASCADE"},
   department: { type: DataTypes.STRING },
   positionTitle: { type: DataTypes.STRING },
   workEmail: { type: DataTypes.STRING },
