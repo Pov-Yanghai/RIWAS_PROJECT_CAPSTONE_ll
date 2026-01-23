@@ -2,9 +2,7 @@ import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database.js";
 import { JobPosting } from "./JobPosting.js";
 import { Candidate } from "./Candidate.js";
-import { InterviewSchedule } from "./InterviewSchedule.js";
 import { APPLICATION_STATUS } from "../config/constants.js";
-
 export const JobApplication = sequelize.define("JobApplication", {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   job_id: { type: DataTypes.UUID, allowNull: false, references: { model: JobPosting, key: "id" }, onDelete: "CASCADE" },
@@ -20,7 +18,7 @@ export const JobApplication = sequelize.define("JobApplication", {
   applied_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   rejected_at: { type: DataTypes.DATE },
   rejection_reason: { type: DataTypes.TEXT },
-  interview_id: { type: DataTypes.UUID, references: { model: InterviewSchedule, key: "id" } },
+  interview_id: { type: DataTypes.UUID, references: { model: "InterviewSchedules", key: "id" } },
   score: { type: DataTypes.FLOAT },
   updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 }, { indexes: [{ fields: ["job_id", "candidate_id"], unique: true }, { fields: ["status"] }] });

@@ -6,11 +6,12 @@ import compression from "compression";
 import dotenv from "dotenv";
 import { sequelize } from "./config/database.js";
 
-// Routes
+// Routes imports
 import authRoutes from "./routes/authRoutes.js";
-// import userRoutes from "./routes/userRoutes.js"
+import userRoutes from "./routes/userRoutes.js"
+import profileRoutes from "./routes/profileRoutes.js"
 
-// Middleware
+// Middleware imports
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { requestValidator } from "./middlewares/requestValidator.js";
 
@@ -25,11 +26,13 @@ const ENV = process.env.NODE_ENV || "development";
 // --------------------
 app.use(helmet()); // Adds HTTP headers to secure your app
 app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+  // cors({
+  //   origin: process.env.CLIENT_URL || "http://localhost:3000",
    
-    credentials: true,
-  })
+  //   credentials: true,
+  // })   -- old version specific origin
+  
+  cors() // Allow all origins 
 );
 
 // --------------------
@@ -60,7 +63,8 @@ app.get("/health", (req, res) => {
 // API Routes
 // --------------------
 app.use("/api/auth", authRoutes);
-// app.use("/api/users", userRoutes); // uncomment when ready
+app.use("/api/users", userRoutes); // uncomment when ready
+app.use("/api/profiles", profileRoutes);
 
 // --------------------
 // 404 Handler

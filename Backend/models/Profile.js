@@ -18,7 +18,7 @@ export const Profile = sequelize.define("Profile", {
   linkedin: { type: DataTypes.STRING, allowNull: true },
   twitter: { type: DataTypes.STRING, allowNull: true },
   views: { type: DataTypes.INTEGER, defaultValue: 0 },
-  role: { type: DataTypes.ENUM(...Object.values(USER_ROLES)), allowNull: false },
+  role: { type: DataTypes.ENUM(...Object.values(USER_ROLES)), allowNull: false, defaultValue: USER_ROLES.CANDIDATE },
   createdAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   updatedAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
 });

@@ -16,9 +16,10 @@ import { ScoreAttribute } from "./ScoreAttribute.js";
 
 export function initializeAssociations() {
   // User - Profile (1:1)
+  
   User.hasOne(Profile, { foreignKey: "user_id", as: "profile", onDelete: "CASCADE" });
   Profile.belongsTo(User, { foreignKey: "user_id", as: "user" });
-
+ 
   // Profile - Candidate (1:1)
   Profile.hasOne(Candidate, { foreignKey: "profile_id", as: "candidateInfo" });
   Candidate.belongsTo(Profile, { foreignKey: "profile_id", as: "profile" });
