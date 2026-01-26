@@ -10,6 +10,9 @@ import { sequelize } from "./config/database.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js"
 import profileRoutes from "./routes/profileRoutes.js"
+import jobpostingRoutes from "./routes/jobpostingRoutes.js"
+import jobapplicationRoutes from "./routes/jobapplicationRoutes.js"
+import interviewRoutes from "./routes/interviewRoutes.js"
 
 // Middleware imports
 import { errorHandler } from "./middlewares/errorHandler.js";
@@ -30,7 +33,8 @@ app.use(
   //   origin: process.env.CLIENT_URL || "http://localhost:3000",
    
   //   credentials: true,
-  // })   -- old version specific origin
+  //  })   
+  //  -- old version specific origin
   
   cors() // Allow all origins 
 );
@@ -65,7 +69,9 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes); // uncomment when ready
 app.use("/api/profiles", profileRoutes);
-
+app.use("/api/jobpostings", jobpostingRoutes);
+app.use("/api/jobapplications", jobapplicationRoutes);
+app.use("/api/interviews", interviewRoutes);
 // --------------------
 // 404 Handler
 // --------------------

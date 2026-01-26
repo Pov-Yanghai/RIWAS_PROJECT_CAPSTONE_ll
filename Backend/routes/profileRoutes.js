@@ -6,24 +6,14 @@ import upload from '../middlewares/uploadProfileImage.js';
 const router = express.Router();
 
 // Create profile with image
-router.post(
-  '/',
-  authenticate,
-  upload.single('avatar'),
-  profileController.createProfile
-);
+router.post('/',authenticate,upload.single('avatar'),profileController.createProfile);
 
 // Get Profile by User ID
 router.get('/:userId', profileController.getProfile);
 
 // Update Profile
 
-router.put(
-  '/',
-  authenticate,
-  upload.single('avatar'),
-  profileController.updateProfile
-);
+router.put('/',authenticate,upload.single('avatar'),profileController.updateProfile);
 
 // Increment Profile Views
 

@@ -5,7 +5,7 @@ import { JOB_STATUS, JOB_TYPE } from "../config/constants.js";
 
 export const JobPosting = sequelize.define("JobPosting", {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-  postedBy: { type: DataTypes.UUID, allowNull: false, references: { model: "Recruiters", key: "id" } },
+  postedBy: { type: DataTypes.UUID, allowNull: false, references: { model: "Users", key: "id" } },
   title: { type: DataTypes.STRING, allowNull: false },
   description: { type: DataTypes.TEXT, allowNull: false },
   requirements: { type: DataTypes.JSONB, allowNull: true },

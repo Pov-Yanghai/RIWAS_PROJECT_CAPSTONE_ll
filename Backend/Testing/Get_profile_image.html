@@ -26,6 +26,8 @@
   <div>
     <p><strong>Headline:</strong> <span id="headline"></span></p>
     <p><strong>About:</strong> <span id="about"></span></p>
+    <p><strong>Experience:</strong><span id="experience"></span></p>
+    <p><strong>Git hub Link :</strong><span id="github"></span></p>
     <p><strong>Avatar:</strong></p>
 
     <img id="avatar" />
@@ -34,11 +36,11 @@
   <script>
     async function loadProfile() {
       try {
-        const userId = "6003296a-b2e6-4428-9fcd-8560f3aa452f";
+        const userId = "961c4c23-c9ba-40c1-88bc-daa172a85155";
 
         // 🔐 PASTE YOUR TOKEN HERE
         // const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwMDMyOTZhLWIyZTYtNDQyOC05ZmNkLTg1NjBmM2FhNDUyZiIsInJvbGUiOiJjYW5kaWRhdGUiLCJpYXQiOjE3NjkxODQ1NjcsImV4cCI6MTc2OTc4OTM2N30.K2TcLsAbRubGcqN8Zkf67NQ_tBPzT0A6JV0-8ELYTxY";
-        const token = "PASTE_YOUR_TOKEN_HERE";
+        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk2MWM0YzIzLWM5YmEtNDBjMS04OGJjLWRhYTE3MmE4NTE1NSIsInJvbGUiOiJjYW5kaWRhdGUiLCJpYXQiOjE3Njk0MzczODUsImV4cCI6MTc3MDA0MjE4NX0.ibijsF5IwJGv3AYmgtV5_2t5yiA_2R1ZzAzV9sYptIg";
         const res = await fetch(`http://localhost:5000/api/profiles/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -52,6 +54,9 @@
 
         document.getElementById("headline").textContent = profile.headline || "-";
         document.getElementById("about").textContent = profile.about || "-";
+        document.getElementById("experience").textContent = profile.experience || "-";
+        
+        document.getElementById("github").textContent = profile.github || "-";
         
 
         if (profile.avatarUrl) {

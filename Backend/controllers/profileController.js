@@ -4,15 +4,11 @@ import { Candidate } from "../models/Candidate.js";
 import { Recruiter } from "../models/Recruiter.js";
 import { asyncHandler } from "../middlewares/errorHandler.js";
 
-/**
- * =========================
- * Create Profile
- * =========================
- */
+//Create Profile
 export const createProfile = asyncHandler(async (req, res) => {
   // Check if profile already exists
   const existingProfile = await Profile.findOne({
-    where: { userId: req.user.id },
+    where: { user_id: req.user.id },
   });
 
   if (existingProfile) {
@@ -21,39 +17,41 @@ export const createProfile = asyncHandler(async (req, res) => {
 
   // Create base profile
   const profile = await Profile.create({
-    userId: req.user.id,
+    user_id: req.user.id,
     role: req.user.role,
-    bio: req.body.bio,
+    bio: req.body.bio || null,
     avatarUrl: req.file ? req.file.path : null,
-    headline: req.body.headline,
-    about: req.body.about,
-    experience: req.body.experience,
-    websiteUrl: req.body.websiteUrl,
-    github: req.body.github,
-    linkedin: req.body.linkedin,
-    twitter: req.body.twitter,
+    headline: req.body.headline || null,
+    about: req.body.about || null,
+    experience: req.body.experience || 0,
+    websiteUrl: req.body.websiteUrl || null,
+    github: req.body.github || null,
+    linkedin: req.body.linkedin || null,
+    twitter: req.body.twitter || null,
   });
 
-  // Create candidate info
-  if (req.user.role === "candidate" && req.body.candidateInfo) {
+  // Create candidate info (if role is candidate)
+  if (req.user.role === "candidate") {
     await Candidate.create({
-      profileId: profile.id,
-      resumeUrl: req.body.candidateInfo.resumeUrl || null,
-      education: req.body.candidateInfo.education || null,
-      experience: req.body.candidateInfo.experience || null,
-      summary: req.body.candidateInfo.summary || null,
+      user_id: req.user.id,      
+      profile_id: profile.id,
+      resumeUrl: req.body.candidateInfo?.resumeUrl || null,
+      education: req.body.candidateInfo?.education || null,
+      experience: req.body.candidateInfo?.experience || 0,
+      summary: req.body.candidateInfo?.summary || null,
     });
   }
 
-  // Create recruiter info
-  if (req.user.role === "recruiter" && req.body.recruiterInfo) {
+  // Create recruiter info (if role is recruiter)
+  if (req.user.role === "recruiter") {
     await Recruiter.create({
-      profileId: profile.id,
-      department: req.body.recruiterInfo.department || null,
-      positionTitle: req.body.recruiterInfo.positionTitle || null,
-      workEmail: req.body.recruiterInfo.workEmail || null,
-      phoneExtension: req.body.recruiterInfo.phoneExtension || null,
-      notes: req.body.recruiterInfo.notes || null,
+      user_id: req.user.id,       
+      profile_id: profile.id,
+      department: req.body.recruiterInfo?.department || null,
+      positionTitle: req.body.recruiterInfo?.position_title || null,
+      workEmail: req.body.recruiterInfo?.work_email || null,
+      phoneExtension: req.body.recruiterInfo?.phone_extension || null,
+      notes: req.body.recruiterInfo?.notes || null,
     });
   }
 
@@ -72,14 +70,10 @@ export const createProfile = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * =========================
- * Get Profile by User ID
- * =========================
- */
+// Get Profile by User ID 
 export const getProfile = asyncHandler(async (req, res) => {
   const profile = await Profile.findOne({
-    where: { userId: req.params.userId },
+    where: { user_id: req.params.userId },
     include: [
       { model: User, as: "user", attributes: { exclude: ["password"] } },
       { model: Candidate, as: "candidateInfo" },
@@ -94,14 +88,10 @@ export const getProfile = asyncHandler(async (req, res) => {
   res.status(200).json({ data: profile });
 });
 
-/**
- * =========================
- * Update Profile
- * =========================
- */
+// Update Profile
 export const updateProfile = asyncHandler(async (req, res) => {
   const profile = await Profile.findOne({
-    where: { userId: req.user.id },
+    where: { user_id: req.user.id },
   });
 
   if (!profile) {
@@ -110,6 +100,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
 
   // Only allow profile fields to be updated
   const allowedProfileFields = [
+    "bio",
     "headline",
     "about",
     "experience",
@@ -133,16 +124,49 @@ export const updateProfile = asyncHandler(async (req, res) => {
 
   // Update candidate info
   if (req.user.role === "candidate" && req.body.candidateInfo) {
-    await Candidate.update(req.body.candidateInfo, {
-      where: { profileId: profile.id },
-    });
+    const candidate = await Candidate.findOne({ where: { profile_id: profile.id } });
+    if (candidate) {
+      await candidate.update({
+        resumeUrl: req.body.candidateInfo?.resumeUrl || candidate.resumeUrl,
+        education: req.body.candidateInfo?.education || candidate.education,
+        experience: req.body.candidateInfo?.experience ?? candidate.experience,
+        summary: req.body.candidateInfo?.summary || candidate.summary,
+      });
+    } else {
+      // If candidate record doesn't exist yet, create it
+      await Candidate.create({
+        user_id: req.user.id,
+        profile_id: profile.id,
+        resumeUrl: req.body.candidateInfo?.resumeUrl || null,
+        education: req.body.candidateInfo?.education || null,
+        experience: req.body.candidateInfo?.experience || 0,
+        summary: req.body.candidateInfo?.summary || null,
+      });
+    }
   }
 
   // Update recruiter info
   if (req.user.role === "recruiter" && req.body.recruiterInfo) {
-    await Recruiter.update(req.body.recruiterInfo, {
-      where: { profileId: profile.id },
-    });
+    const recruiter = await Recruiter.findOne({ where: { profile_id: profile.id } });
+    if (recruiter) {
+      await recruiter.update({
+        department: req.body.recruiterInfo?.department || recruiter.department,
+        positionTitle: req.body.recruiterInfo?.position_title || recruiter.positionTitle,
+        workEmail: req.body.recruiterInfo?.work_email || recruiter.workEmail,
+        phoneExtension: req.body.recruiterInfo?.phone_extension || recruiter.phoneExtension,
+        notes: req.body.recruiterInfo?.notes || recruiter.notes,
+      });
+    } else {
+      await Recruiter.create({
+        user_id: req.user.id,
+        profile_id: profile.id,
+        department: req.body.recruiterInfo?.department || null,
+        positionTitle: req.body.recruiterInfo?.position_title || null,
+        workEmail: req.body.recruiterInfo?.work_email || null,
+        phoneExtension: req.body.recruiterInfo?.phone_extension || null,
+        notes: req.body.recruiterInfo?.notes || null,
+      });
+    }
   }
 
   // Reload full profile
@@ -160,14 +184,10 @@ export const updateProfile = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * =========================
- * Increment Profile Views
- * =========================
- */
+// Increment Profile Views 
 export const incrementProfileViews = asyncHandler(async (req, res) => {
   const profile = await Profile.findOne({
-    where: { userId: req.params.userId },
+    where: { user_id: req.params.userId },
   });
 
   if (!profile) {

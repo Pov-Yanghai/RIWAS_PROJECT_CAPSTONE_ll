@@ -48,3 +48,10 @@ export const NOTIFICATION_TYPES = {
   JOB_CLOSED: "job_closed",
   NEW_MESSAGE: "new_message",
 }
+
+export const INTERVIEW_STATUS = {
+  SCHEDULED: "scheduled",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+  RESCHEDULED: "rescheduled",
+}

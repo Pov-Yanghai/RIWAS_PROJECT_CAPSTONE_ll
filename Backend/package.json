@@ -33,6 +33,7 @@
     "pdf-parse": "^2.4.5",
     "pg": "^8.16.3",
     "pg-hstore": "^2.3.4",
+    "pgtools": "^1.0.1",
     "sequelize": "^6.37.7",
     "tesseract.js": "^7.0.0"
   }
