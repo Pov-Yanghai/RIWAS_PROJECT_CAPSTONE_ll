@@ -67,7 +67,7 @@ app.get("/health", (req, res) => {
 // API Routes
 // --------------------
 app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes); // uncomment when ready
+app.use("/api/users", userRoutes); 
 app.use("/api/profiles", profileRoutes);
 app.use("/api/jobpostings", jobpostingRoutes);
 app.use("/api/jobapplications", jobapplicationRoutes);

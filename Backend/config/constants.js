@@ -37,6 +37,7 @@ export const WORKFLOW_STEP = {
   DECISION: "decision",
   JOB_OFFER: "job_offer",
   SHORTLIST: "shortlist",
+  FEEDBACK_PROVIDED: "feedback_provided",
 }
 
 

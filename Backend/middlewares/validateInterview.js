@@ -1,29 +1,30 @@
-import { INTERVIEW_STATUS } from "../config/constants.js" // <-- fix this
+import { INTERVIEW_STATUS } from "../config/constants.js";
 
 export const validateInterview = (req, res, next) => {
-  const { candidateId, title, scheduledDate, duration } = req.body
-  if (!candidateId || !title || !scheduledDate || !duration) {
-    return res.status(400).json({ error: "Missing required fields" })
+  const { applicationId, scheduled_at, title, duration } = req.body;
+
+  if (!applicationId || !scheduled_at || !title || !duration) {
+    return res.status(400).json({ error: "Missing required fields" });
   }
-  req.validatedData = { ...req.body }
-  next()
-}
+
+  req.validatedData = { ...req.body };
+  next();
+};
 
 export const validateInterviewStatus = (req, res, next) => {
-  const { status, notes } = req.body
+  const { status, notes } = req.body;
 
   if (!status) {
-    return res.status(400).json({ error: "Status is required" })
+    return res.status(400).json({ error: "Status is required" });
   }
 
-  // Get allowed status values from your constants
-  const allowedStatus = Object.values(INTERVIEW_STATUS)
+  const allowedStatus = Object.values(INTERVIEW_STATUS);
   if (!allowedStatus.includes(status)) {
     return res
       .status(400)
-      .json({ error: `Status must be one of: ${allowedStatus.join(", ")}` })
+      .json({ error: `Status must be one of: ${allowedStatus.join(", ")}` });
   }
 
-  req.validatedData = { status, notes: notes || null }
-  next()
-}
+  req.validatedData = { status, notes: notes || null };
+  next();
+};

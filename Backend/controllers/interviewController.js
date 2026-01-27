@@ -5,6 +5,7 @@ import { Candidate } from "../models/Candidate.js";
 import { JobPosting } from "../models/JobPosting.js";
 import { Profile } from "../models/Profile.js";
 import { User } from "../models/User.js";
+import { Recruiter } from "../models/Recruiter.js"; 
 import { ApplicationWorkflow } from "../models/ApplicationWorkflow.js";
 import { ApplicationStatusHistory } from "../models/ApplicationStatusHistory.js";
 import { asyncHandler } from "../middlewares/errorHandler.js";
@@ -20,9 +21,9 @@ import {
   INTERVIEW_STATUS,
 } from "../config/constants.js";
 
-// =====================
+
 // CREATE INTERVIEW
-// =====================
+
 export const createInterview = asyncHandler(async (req, res) => {
   const {
     applicationId,
@@ -40,7 +41,11 @@ export const createInterview = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: "applicationId and scheduled_at are required" });
   }
 
-  // Fetch the job application with candidate and job
+  // Fetch recruiter record
+  const recruiter = await Recruiter.findOne({ where: { user_id: req.user.id } });
+  if (!recruiter) return res.status(404).json({ error: "Recruiter not found" });
+
+  // Fetch job application with candidate and job
   const application = await JobApplication.findByPk(applicationId, {
     include: [
       {
@@ -56,21 +61,17 @@ export const createInterview = asyncHandler(async (req, res) => {
     ],
   });
 
-  if (!application) {
-    return res.status(404).json({ error: "Application not found" });
-  }
+  if (!application) return res.status(404).json({ error: "Application not found" });
 
-  // Authorization: only recruiter who posted job
-  if (!req.user || application.job.postedBy !== req.user.id) {
+  // Authorization: only recruiter who posted the job
+  if (application.job.postedBy !== req.user.id) {
     return res.status(403).json({ error: "Not authorized" });
   }
-
-  console.log("Creating interview for application:", applicationId);
 
   // Create interview
   const interview = await InterviewSchedule.create({
     application_id: applicationId,
-    scheduled_by: req.user.id,
+    scheduled_by: recruiter.id, 
     scheduled_at,
     location,
     interview_type,
@@ -86,7 +87,7 @@ export const createInterview = asyncHandler(async (req, res) => {
   await ApplicationWorkflow.create({
     application_id: applicationId,
     step: WORKFLOW_STEP.INTERVIEW,
-    performed_by: req.user.id,
+    performed_by: recruiter.id,
   });
 
   // Update application status and save history
@@ -97,7 +98,7 @@ export const createInterview = asyncHandler(async (req, res) => {
     application_id: applicationId,
     old_status: oldStatus,
     new_status: APPLICATION_STATUS.INTERVIEW,
-    changed_by: req.user.id,
+    changed_by: recruiter.id,
     notes: "Interview scheduled",
   });
 
@@ -105,7 +106,7 @@ export const createInterview = asyncHandler(async (req, res) => {
   const candidateUser = application.candidate.profile.user;
 
   await createNotification({
-    senderId: req.user.id,
+    senderId: recruiter.id,
     recipient: candidateUser,
     type: NOTIFICATION_TYPES.INTERVIEW_SCHEDULED,
     content: `Your interview "${title}" has been scheduled.`,
@@ -120,15 +121,18 @@ export const createInterview = asyncHandler(async (req, res) => {
   });
 });
 
-// =====================
+
 // UPDATE INTERVIEW STATUS
-// =====================
+
 export const updateInterviewStatus = asyncHandler(async (req, res) => {
   const { status, notes } = req.body;
 
   if (!Object.values(INTERVIEW_STATUS).includes(status)) {
     return res.status(400).json({ error: "Invalid interview status" });
   }
+
+  const recruiter = await Recruiter.findOne({ where: { user_id: req.user.id } });
+  if (!recruiter) return res.status(404).json({ error: "Recruiter not found" });
 
   const interview = await InterviewSchedule.findByPk(req.params.id, {
     include: [
@@ -151,11 +155,10 @@ export const updateInterviewStatus = asyncHandler(async (req, res) => {
     ],
   });
 
-  if (!interview) {
-    return res.status(404).json({ error: "Interview not found" });
-  }
+  if (!interview) return res.status(404).json({ error: "Interview not found" });
 
-  if (!req.user || interview.application.job.postedBy !== req.user.id) {
+  // Authorization: only recruiter who posted the job
+  if (interview.application.job.postedBy !== req.user.id) {
     return res.status(403).json({ error: "Not authorized" });
   }
 
@@ -166,7 +169,7 @@ export const updateInterviewStatus = asyncHandler(async (req, res) => {
   const candidateUser = interview.application.candidate.profile.user;
 
   await createNotification({
-    senderId: req.user.id,
+    senderId: recruiter.id,
     recipient: candidateUser,
     type: NOTIFICATION_TYPES.INTERVIEW_UPDATED,
     content: `Your interview "${interview.title}" status is now "${status}".`,
@@ -181,13 +184,16 @@ export const updateInterviewStatus = asyncHandler(async (req, res) => {
   });
 });
 
-// =====================
+
 // ADD INTERVIEW FEEDBACK
-// =====================
+
 export const addInterviewFeedback = asyncHandler(async (req, res) => {
   const { interviewId, comments, rating, recommendation, shared_with_candidate } = req.body;
 
   if (!interviewId) return res.status(400).json({ error: "interviewId is required" });
+
+  const recruiter = await Recruiter.findOne({ where: { user_id: req.user.id } });
+  if (!recruiter) return res.status(404).json({ error: "Recruiter not found" });
 
   const interview = await InterviewSchedule.findByPk(interviewId, {
     include: [
@@ -201,13 +207,14 @@ export const addInterviewFeedback = asyncHandler(async (req, res) => {
 
   if (!interview) return res.status(404).json({ error: "Interview not found" });
 
-  if (!req.user || interview.application.job.postedBy !== req.user.id) {
+  // Authorization: only recruiter who posted the job
+  if (interview.application.job.postedBy !== req.user.id) {
     return res.status(403).json({ error: "Not authorized" });
   }
 
   const feedback = await InterviewFeedback.create({
     interview_id: interviewId,
-    given_by: req.user.id,
+    given_by: recruiter.id,
     comments,
     rating,
     recommendation,
@@ -217,7 +224,7 @@ export const addInterviewFeedback = asyncHandler(async (req, res) => {
   await ApplicationWorkflow.create({
     application_id: interview.application_id,
     step: WORKFLOW_STEP.FEEDBACK_PROVIDED,
-    performed_by: req.user.id,
+    performed_by: recruiter.id,
   });
 
   res.status(201).json({
@@ -226,9 +233,9 @@ export const addInterviewFeedback = asyncHandler(async (req, res) => {
   });
 });
 
-// =====================
+
 // GET CANDIDATE INTERVIEWS
-// =====================
+
 export const getCandidateInterviews = asyncHandler(async (req, res) => {
   const candidate = await Candidate.findOne({
     include: {
@@ -255,12 +262,15 @@ export const getCandidateInterviews = asyncHandler(async (req, res) => {
   res.status(200).json({ data: interviews });
 });
 
-// =====================
+
 // GET RECRUITER INTERVIEWS
-// =====================
+
 export const getRecruiterInterviews = asyncHandler(async (req, res) => {
+  const recruiter = await Recruiter.findOne({ where: { user_id: req.user.id } });
+  if (!recruiter) return res.status(404).json({ error: "Recruiter not found" });
+
   const interviews = await InterviewSchedule.findAll({
-    where: { scheduled_by: req.user.id },
+    where: { scheduled_by: recruiter.id }, // <-- Use Recruiters.id
     include: [
       {
         model: JobApplication,

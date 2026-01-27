@@ -16,7 +16,8 @@ export const authenticate = async (req, res, next) => {
     const user = await User.findByPk(decoded.id)
     if (!user) return res.status(404).json({ error: "User not found" })
 
-    req.user = user 
+    // req.user = user 
+    req.user = { id: user.id, role: user.role, email: user.email }
     next()
   } catch (err) {
     return res.status(403).json({ error: "Invalid token" })
