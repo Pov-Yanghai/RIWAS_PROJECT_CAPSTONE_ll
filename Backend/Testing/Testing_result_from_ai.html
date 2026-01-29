@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Job Application Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    #applications {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .app-box {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .app-box:hover {
+      transform: translateY(-3px);
+    }
+    .app-box h3 {
+      margin-top: 0;
+      color: #007bff;
+    }
+    .app-box p {
+      margin: 5px 0;
+      color: #555;
+    }
+    .score {
+      font-weight: bold;
+      color: #007bff;
+    }
+    .missing-skills {
+      color: #ff4d4f;
+    }
+    button {
+      padding: 5px 10px;
+      border: none;
+      background: #007bff;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 5px;
+      margin-top: 5px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #pdfPreviewContainer {
+      margin-top: 30px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    #pdfPreview {
+      width: 90%;
+      height: 80vh;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>AI Job Application Dashboard</h1>
+
+  <div id="applications"></div>
+
+  <div id="pdfPreviewContainer">
+    <h3>PDF Preview</h3>
+    <iframe id="pdfPreview"></iframe>
+  </div>
+
+  <script>
+    const API_URL = "http://localhost:5000/api/jobapplications";
+    const JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFhNmE3YzVmLTg3NGItNDIxMy04YmFmLTNkZWNkY2JmYmZkOCIsInJvbGUiOiJjYW5kaWRhdGUiLCJpYXQiOjE3Njk2OTAxMzEsImV4cCI6MTc3MDI5NDkzMX0.yOqI_ghCXvZ3ZPg6lBGv98wFbA4_OswQT4gMc6K2WSs"; 
+
+    // Load applications
+    async function loadApplications() {
+      try {
+        const res = await fetch(`${API_URL}?page=1&limit=20`, {
+          headers: { "Authorization": `Bearer ${JWT_TOKEN}` }
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch applications");
+
+        const json = await res.json();
+        const applications = json.data || [];
+        const container = document.getElementById("applications");
+        container.innerHTML = "";
+
+        if (applications.length === 0) {
+          container.innerHTML = "<p>No applications found.</p>";
+          return;
+        }
+
+        applications.forEach(app => {
+          const box = document.createElement("div");
+          box.classList.add("app-box");
+
+          const jobTitle = app.job?.title || "Job Title";
+
+          // Default AI analysis
+          let ai = {
+            skills: [],
+            experience: "N/A",
+            matchScore: "N/A",
+            coverLetterScore: "N/A",
+            missingSkills: []
+          };
+
+          // Parse AI JSON safely
+          if (app.ai_analysis?.raw) {
+            try {
+              const cleaned = app.ai_analysis.raw.replace(/```json|```/g, "").trim();
+              const parsed = JSON.parse(cleaned);
+
+              ai = { ...ai, ...parsed };
+            } catch (e) {
+              console.warn("Failed to parse AI analysis:", e);
+            }
+          }
+
+          const skills = ai.skills?.length ? ai.skills.join(", ") : "N/A";
+          const experience = ai.experience || "N/A";
+          const matchScore = ai.matchScore !== undefined ? ai.matchScore : "N/A";
+          const coverLetterScore = ai.coverLetterScore !== undefined ? ai.coverLetterScore : "N/A";
+          const missingSkills = ai.missingSkills?.length ? ai.missingSkills.join(", ") : "None";
+          const missingSkillsClass = ai.missingSkills?.length ? "missing-skills" : "";
+
+          box.innerHTML = `
+            <h3>${jobTitle}</h3>
+            <p><strong>Skills:</strong> ${skills}</p>
+            <p><strong>Experience:</strong> ${experience}</p>
+            <p><strong>Match Score (Resume):</strong> <span class="score">${matchScore}</span></p>
+            <p><strong>Cover Letter Score:</strong> <span class="score">${coverLetterScore}</span></p>
+            <p><strong>Missing Skills:</strong> <span class="${missingSkillsClass}">${missingSkills}</span></p>
+            <p>
+              <button onclick="viewResume('${app.id}')">View Resume</button>
+              <button onclick="viewCoverLetter('${app.id}')">View Cover Letter</button>
+            </p>
+          `;
+
+          container.appendChild(box);
+        });
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById("applications").innerHTML = `<p style="color:red;">${err.message}</p>`;
+      }
+    }
+
+    // View Resume
+    async function viewResume(applicationId) {
+      try {
+        const res = await fetch(`${API_URL}/${applicationId}/resume`, {
+          headers: { "Authorization": `Bearer ${JWT_TOKEN}` }
+        });
+        if (!res.ok) throw new Error("Failed to fetch resume");
+
+        const data = await res.json();
+        showPDF(data.url);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // View Cover Letter
+    async function viewCoverLetter(applicationId) {
+      try {
+        const res = await fetch(`${API_URL}/${applicationId}/coverLetter`, {
+          headers: { "Authorization": `Bearer ${JWT_TOKEN}` }
+        });
+        if (!res.ok) throw new Error("Failed to fetch cover letter");
+
+        const data = await res.json();
+        showPDF(data.url);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // Show PDF in iframe
+    function showPDF(url) {
+      const container = document.getElementById("pdfPreviewContainer");
+      const iframe = document.getElementById("pdfPreview");
+      iframe.src = url; // PDF opens inline
+      container.style.display = "flex";
+      container.scrollIntoView({ behavior: "smooth" });
+    }
+
+    // Load on page load
+    loadApplications();
+  </script>
+</body>
+</html>

@@ -29,14 +29,14 @@ const ENV = process.env.NODE_ENV || "development";
 // --------------------
 app.use(helmet()); // Adds HTTP headers to secure your app
 app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+  // cors({
+  //   origin: process.env.CLIENT_URL || "http://localhost:3000",
    
-    credentials: true,
-   })   
+  //   credentials: true,
+  //  })   
   //  -- old version specific origin
   
-  // cors() // Allow all origins 
+  cors() // Allow all origins 
 );
 
 // --------------------

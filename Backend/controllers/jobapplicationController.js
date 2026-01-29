@@ -1,15 +1,16 @@
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const pdfParse = require("pdf-parse").default || require("pdf-parse");
 
 import axios from "axios";
+import FormData from "form-data";
+
 import { JobApplication } from "../models/JobApplication.js";
 import { JobPosting } from "../models/JobPosting.js";
 import { Candidate } from "../models/Candidate.js";
 import { Profile } from "../models/Profile.js";
 import { User } from "../models/User.js";
 import { asyncHandler } from "../middlewares/errorHandler.js";
-import { uploadImage } from "../utils/cloudinary.js";
+import { uploadImage, cloudinary, uploadPDF } from "../utils/cloudinary.js";
 import { APPLICATION_STATUS, NOTIFICATION_TYPES, USER_ROLES } from "../config/constants.js";
 import { createNotification } from "../services/notificationService.js";
 
@@ -17,86 +18,96 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 
-// Submit Applications 
+// Function to call Python service for multiple PDFs
+
+async function extractTextWithPython(files) {
+  const form = new FormData();
+  for (const key in files) {
+    form.append(key, files[key].buffer, files[key].originalname);
+  }
+
+  const response = await axios.post("http://127.0.0.1:5001/extract", form, {
+    headers: form.getHeaders(),
+    maxBodyLength: Infinity,
+  });
+
+  return response.data || {};
+}
+
+
+// Submit Application
+
 export const submitApplication = asyncHandler(async (req, res) => {
   const { jobId } = req.body;
 
-  // Get job posting
   const job = await JobPosting.findByPk(jobId);
   if (!job) return res.status(404).json({ error: "Job not found" });
 
-  // Get candidate profile
   const candidateProfile = await Profile.findOne({
     where: { user_id: req.user.id, role: USER_ROLES.CANDIDATE },
     include: [{ model: Candidate, as: "candidateInfo" }],
   });
 
-  if (!candidateProfile)
-    return res.status(403).json({ error: "Only candidates can apply" });
-
+  if (!candidateProfile) return res.status(403).json({ error: "Only candidates can apply" });
   const candidate = candidateProfile.candidateInfo;
   if (!candidate) return res.status(400).json({ error: "Candidate profile missing" });
 
-  // Check existing application
   const exists = await JobApplication.findOne({
     where: { job_id: jobId, candidate_id: candidate.id },
   });
   if (exists) return res.status(409).json({ error: "Already applied" });
 
-  // Handle resume upload
   const resumeFile = req.files?.resume?.[0];
   if (!resumeFile) return res.status(400).json({ error: "Resume is required" });
 
-  const resumeUpload = await uploadImage(resumeFile.buffer, "applications");
+  // Upload resume
+  const resumeUpload = await uploadPDF(resumeFile.buffer, "applications");
   const resumeUrl = resumeUpload.secure_url;
+  const resumePublicId = resumeUpload.public_id;
 
-  // Parse PDF safely
-  let resumeText = "";
-  try {
-    if (resumeFile.buffer.length > 0) {
-      resumeText = (await pdfParse(resumeFile.buffer)).text || "";
-    }
-  } catch (err) {
-    console.warn("Resume parsing failed, using empty string:", err.message);
-    resumeText = "";
-  }
-
-  // Handle optional cover letter
+  // Optional cover letter
   let coverLetterUrl = null;
-  let coverLetterText = "";
+  let coverLetterPublicId = null;
   const coverLetterFile = req.files?.coverLetter?.[0];
   if (coverLetterFile) {
-    const upload = await uploadImage(coverLetterFile.buffer, "cover-letters");
+    const upload = await uploadPDF(coverLetterFile.buffer, "cover-letters");
     coverLetterUrl = upload.secure_url;
-
-    try {
-      coverLetterText =
-        coverLetterFile.mimetype === "application/pdf"
-          ? (await pdfParse(coverLetterFile.buffer)).text || ""
-          : coverLetterFile.buffer.toString("utf-8");
-    } catch (err) {
-      console.warn("Cover letter parsing failed, using empty string:", err.message);
-      coverLetterText = "";
-    }
+    coverLetterPublicId = upload.public_id;
+  }
+  console.log("Cover Letter File:", coverLetterFile);
+  // Extract text from Python service
+  let extractedTexts = {};
+  try {
+    extractedTexts = await extractTextWithPython({
+      resume: resumeFile,
+      ...(coverLetterFile ? { coverLetter: coverLetterFile } : {}),
+    });
+  } catch (err) {
+    console.warn("Text extraction failed:", err.message);
   }
 
-  // Gemini AI analysis for skills, experience, and job match
+  const resumeText = extractedTexts.resume || "";
+  const coverLetterText = extractedTexts.coverLetter || "";
+
+  // Gemini AI analysis
+
   let aiResult = {};
   try {
     const prompt = `
-    You are analyzing a candidate's CV and cover letter for a job posting.
-    Extract the candidate's skills, experience, and match score with the following job description:
-    Job Description: ${job.description}
-    Resume Text: ${resumeText}
-    Cover Letter Text: ${coverLetterText}
-    Return a JSON object:
-    {
-      "skills": ["list of skills from resume"],
-      "experience": "years of experience related to job",
-      "matchScore": 0-1,
-      "missingSkills": ["skills required by job but not in resume"],
-      "raw": "original text analysis"
-    }
+      You are analyzing a candidate's CV and cover letter for a job posting.
+      Extract the candidate's skills, experience, and match score with the following job description:
+      Job Description: ${job.description}
+      Resume Text: ${resumeText}
+      Cover Letter Text: ${coverLetterText}
+      Return a JSON object:
+      {
+        "skills": ["list of skills from resume"],
+        "experience": "years of experience related to job",
+        "matchScore": 0-1,
+        "missingSkills": ["skills required by job but not in resume"],
+        "coverLetterScore": 0-1,
+        "raw": "original text analysis"
+      }
     `;
 
     const response = await axios.post(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
@@ -122,7 +133,9 @@ export const submitApplication = asyncHandler(async (req, res) => {
     job_id: jobId,
     candidate_id: candidate.id,
     resume: resumeUrl,
+    resumePublicId,
     cover_letter: coverLetterUrl,
+    coverLetterPublicId,
     extracted_text: resumeText,
     cover_letter_text: coverLetterText,
     ai_analysis: aiResult,
@@ -132,7 +145,6 @@ export const submitApplication = asyncHandler(async (req, res) => {
     applied_at: new Date(),
   });
 
-  // Reload to include job & candidate for notification
   await application.reload({
     include: [
       { model: JobPosting, as: "job" },
@@ -157,15 +169,12 @@ export const submitApplication = asyncHandler(async (req, res) => {
     console.warn("Failed to send application status notification:", err.message);
   }
 
-  res.status(201).json({
-    message: "Application submitted successfully",
-    data: application,
-  });
+  res.status(201).json({ message: "Application submitted successfully", data: application });
 });
 
-// ==============================
-// UPDATE APPLICATION STATUS (Recruiter)
-// ==============================
+
+// Update Application Status (Recruiter)
+
 export const updateApplicationStatus = asyncHandler(async (req, res) => {
   const { status, rejection_reason } = req.body;
 
@@ -181,14 +190,10 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
   });
 
   if (!application) return res.status(404).json({ error: "Application not found" });
-
-  if (application.job.postedBy !== req.user.id) {
+  if (application.job.postedBy !== req.user.id)
     return res.status(403).json({ error: "Not authorized" });
-  }
-
-  if (!Object.values(APPLICATION_STATUS).includes(status)) {
+  if (!Object.values(APPLICATION_STATUS).includes(status))
     return res.status(400).json({ error: "Invalid status" });
-  }
 
   const updates = { status };
   if (status === APPLICATION_STATUS.REJECTED) {
@@ -212,9 +217,9 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Application status updated successfully", data: application });
 });
 
-// ==============================
-// GET CANDIDATE APPLICATIONS
-// ==============================
+
+// Get Candidate Applications
+
 export const getApplications = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, status } = req.query;
   const offset = (page - 1) * limit;
@@ -223,7 +228,7 @@ export const getApplications = asyncHandler(async (req, res) => {
     where: { user_id: req.user.id, role: USER_ROLES.CANDIDATE },
     include: [{ model: Candidate, as: "candidateInfo" }],
   });
-  
+
   if (!candidateProfile) return res.status(403).json({ error: "Only candidates can access applications" });
   const candidate = candidateProfile.candidateInfo;
 
@@ -245,14 +250,11 @@ export const getApplications = asyncHandler(async (req, res) => {
     order: [["applied_at", "DESC"]],
   });
 
-  res.status(200).json({
-    data: rows,
-    pagination: { total: count, page: Number(page), limit: Number(limit) },
-  });
+  res.status(200).json({ data: rows, pagination: { total: count, page: Number(page), limit: Number(limit) } });
 });
 
 
-// GET APPLICATION BY ID
+// Get Application by ID
 
 export const getApplicationById = asyncHandler(async (req, res) => {
   const application = await JobApplication.findByPk(req.params.id, {
@@ -268,16 +270,15 @@ export const getApplicationById = asyncHandler(async (req, res) => {
 
   if (!application) return res.status(404).json({ error: "Application not found" });
 
-  // Only candidate or recruiter can view
   const candidateUserId = application.candidate?.profile?.user?.id;
-  if (req.user.id !== candidateUserId && req.user.id !== application.job.postedBy) {
+  if (req.user.id !== candidateUserId && req.user.id !== application.job.postedBy)
     return res.status(403).json({ error: "Not authorized" });
-  }
 
   res.status(200).json({ data: application });
 });
 
-// DELETE APPLICATION
+
+// Delete Application
 
 export const deleteApplication = asyncHandler(async (req, res) => {
   const application = await JobApplication.findByPk(req.params.id, {
@@ -292,42 +293,58 @@ export const deleteApplication = asyncHandler(async (req, res) => {
   });
   const candidateId = candidateProfile?.candidateInfo?.id;
 
-  if (application.candidate_id !== candidateId && application.job.postedBy !== req.user.id) {
+  if (application.candidate_id !== candidateId && application.job.postedBy !== req.user.id)
     return res.status(403).json({ error: "Not authorized" });
-  }
 
   await application.destroy();
   res.status(200).json({ message: "Application deleted successfully" });
 });
 
-// GET RESUME FILE BY APPLICATION ID
-export const getResume = asyncHandler(async (req, res) => {
-  const { id } = req.params;
 
-  const application = await JobApplication.findByPk(id);
+export const getResume = asyncHandler(async (req, res) => {
+  const application = await JobApplication.findByPk(req.params.id);
   if (!application) return res.status(404).json({ error: "Application not found" });
 
   const job = await JobPosting.findByPk(application.job_id);
   if (!job) return res.status(404).json({ error: "Job not found" });
 
-  // Only candidate who applied or recruiter who posted the job
-  if (req.user.id !== application.user_id && req.user.id !== job.postedBy) {
+  if (req.user.id !== application.user_id && req.user.id !== job.postedBy)
     return res.status(403).json({ error: "Not authorized" });
-  }
 
-  if (!application.resume) return res.status(404).json({ error: "Resume not uploaded" });
+  if (!application.resumePublicId) return res.status(404).json({ error: "Resume not uploaded" });
 
   try {
-    // Generate signed URL valid for 5 minutes
     const url = cloudinary.url(application.resumePublicId, {
-      type: "authenticated",
+      resource_type: "raw", // for PDF
+    });
+
+    res.json({ url }); // return URL to frontend
+  } catch (err) {
+    console.error("Failed to get resume URL:", err.message);
+    res.status(500).json({ error: "Failed to load resume" });
+  }
+});
+
+export const getCoverLetter = asyncHandler(async (req, res) => {
+  const application = await JobApplication.findByPk(req.params.id);
+  if (!application) return res.status(404).json({ error: "Application not found" });
+
+  const job = await JobPosting.findByPk(application.job_id);
+  if (!job) return res.status(404).json({ error: "Job not found" });
+
+  if (req.user.id !== application.user_id && req.user.id !== job.postedBy)
+    return res.status(403).json({ error: "Not authorized" });
+
+  if (!application.coverLetterPublicId) return res.status(404).json({ error: "Cover letter not uploaded" });
+
+  try {
+    const url = cloudinary.url(application.coverLetterPublicId, {
       resource_type: "raw",
-      expires_at: Math.floor(Date.now() / 1000) + 300, // 5 minutes
     });
 
     res.json({ url });
   } catch (err) {
-    console.error("Failed to generate signed URL:", err.message);
-    res.status(500).json({ error: "Failed to load resume" });
+    console.error("Failed to get cover letter URL:", err.message);
+    res.status(500).json({ error: "Failed to load cover letter" });
   }
 });

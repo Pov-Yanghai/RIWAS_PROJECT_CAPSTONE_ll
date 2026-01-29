@@ -36,11 +36,11 @@
   <script>
     async function loadProfile() {
       try {
-        const userId = "961c4c23-c9ba-40c1-88bc-daa172a85155";
+        const userId = "458c4028-f39c-4dc7-a368-4979dfa24efd";
 
         // 🔐 PASTE YOUR TOKEN HERE
         // const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYwMDMyOTZhLWIyZTYtNDQyOC05ZmNkLTg1NjBmM2FhNDUyZiIsInJvbGUiOiJjYW5kaWRhdGUiLCJpYXQiOjE3NjkxODQ1NjcsImV4cCI6MTc2OTc4OTM2N30.K2TcLsAbRubGcqN8Zkf67NQ_tBPzT0A6JV0-8ELYTxY";
-        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk2MWM0YzIzLWM5YmEtNDBjMS04OGJjLWRhYTE3MmE4NTE1NSIsInJvbGUiOiJjYW5kaWRhdGUiLCJpYXQiOjE3Njk0MzczODUsImV4cCI6MTc3MDA0MjE4NX0.ibijsF5IwJGv3AYmgtV5_2t5yiA_2R1ZzAzV9sYptIg";
+        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQ1OGM0MDI4LWYzOWMtNGRjNy1hMzY4LTQ5NzlkZmEyNGVmZCIsInJvbGUiOiJjYW5kaWRhdGUiLCJpYXQiOjE3Njk2ODkxMDksImV4cCI6MTc3MDI5MzkwOX0.YaOe8xYwnh8vecE87bCjIIpUAczuvDOE6EX5PwYiHLY";
         const res = await fetch(`http://localhost:5000/api/profiles/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,

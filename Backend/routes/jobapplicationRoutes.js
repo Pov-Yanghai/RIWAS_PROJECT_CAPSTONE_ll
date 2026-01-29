@@ -23,7 +23,8 @@ router.put("/:id", authenticate, jobapplicationController.updateApplicationStatu
 
 router.delete("/:id", authenticate, jobapplicationController.deleteApplication);
 
-
 router.get("/:id/resume", authenticate, jobapplicationController.getResume);
+
+router.get("/:id/coverLetter", authenticate, jobapplicationController.getCoverLetter);
 
 export default router;

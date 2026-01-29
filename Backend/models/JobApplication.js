@@ -22,8 +22,10 @@ export const JobApplication = sequelize.define(
       onDelete: "CASCADE",
       onUpdate: "CASCADE",
     },
-    resume: { type: DataTypes.STRING, allowNull: false }, // URL
+    resume: { type: DataTypes.STRING, allowNull: false }, 
+    resumePublicId: { type: DataTypes.STRING },
     cover_letter: { type: DataTypes.STRING }, 
+    coverLetterPublicId: { type: DataTypes.STRING },
     extracted_text: { type: DataTypes.TEXT },
     cover_letter_text: { type: DataTypes.TEXT },
     ai_analysis: { type: DataTypes.JSONB },
@@ -43,7 +45,7 @@ export const JobApplication = sequelize.define(
   },
   {
     indexes: [
-      { fields: ["job_id", "user_id"], unique: true }, 
+      { fields: ["job_id", "user_id"], unique: true },
       { fields: ["status"] },
     ],
   }
