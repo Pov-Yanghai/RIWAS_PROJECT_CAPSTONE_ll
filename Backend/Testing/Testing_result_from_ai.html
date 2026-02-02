@@ -34,10 +34,6 @@
       margin-top: 0;
       color: #007bff;
     }
-    .app-box p {
-      margin: 5px 0;
-      color: #555;
-    }
     .score {
       font-weight: bold;
       color: #007bff;
@@ -57,6 +53,13 @@
     }
     button:hover {
       background: #0056b3;
+    }
+    .ai-analysis {
+      background: #f0f8ff;
+      border-left: 4px solid #007bff;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
     }
     #pdfPreviewContainer {
       margin-top: 30px;
@@ -84,15 +87,25 @@
 
   <script>
     const API_URL = "http://localhost:5000/api/jobapplications";
-    const JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFhNmE3YzVmLTg3NGItNDIxMy04YmFmLTNkZWNkY2JmYmZkOCIsInJvbGUiOiJjYW5kaWRhdGUiLCJpYXQiOjE3Njk2OTAxMzEsImV4cCI6MTc3MDI5NDkzMX0.yOqI_ghCXvZ3ZPg6lBGv98wFbA4_OswQT4gMc6K2WSs"; 
+    const JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFhNmE3YzVmLTg3NGItNDIxMy04YmFmLTNkZWNkY2JmYmZkOCIsInJvbGUiOiJjYW5kaWRhdGUiLCJpYXQiOjE3Njk3NDcyODUsImV4cCI6MTc3MDM1MjA4NX0.lW7f7znq3_CWUAVP9uxP6s3Qh-f1bRrtvIVLItls4jk"; // replace with actual token
 
-    // Load applications
+    // Helper: parse AI analysis JSON
+    function parseAIAnalysis(ai_analysis) {
+      if (!ai_analysis?.raw) return null;
+      try {
+        const cleaned = ai_analysis.raw.replace(/```json|```/g, "").trim();
+        return JSON.parse(cleaned);
+      } catch (err) {
+        console.warn("AI analysis parse failed", err);
+        return null;
+      }
+    }
+
     async function loadApplications() {
       try {
         const res = await fetch(`${API_URL}?page=1&limit=20`, {
           headers: { "Authorization": `Bearer ${JWT_TOKEN}` }
         });
-
         if (!res.ok) throw new Error("Failed to fetch applications");
 
         const json = await res.json();
@@ -106,47 +119,41 @@
         }
 
         applications.forEach(app => {
+          const parsedAI = parseAIAnalysis(app.ai_analysis);
+
+          const skills = parsedAI?.skills?.join(", ") || "N/A";
+          const experience = parsedAI?.experience || "N/A";
+          const matchScore = parsedAI?.matchScore ?? "N/A";
+          const coverLetterScore = parsedAI?.coverLetterScore ?? "N/A";
+          const missingSkills = parsedAI?.missingSkills?.length
+            ? parsedAI.missingSkills.join(", ")
+            : "None";
+
+          const skillsAnalysis = parsedAI?.raw?.skills_analysis || "N/A";
+          const experienceAnalysis = parsedAI?.raw?.experience_analysis || "N/A";
+          const overallAnalysis = parsedAI?.raw?.overall_analysis || "N/A";
+
           const box = document.createElement("div");
           box.classList.add("app-box");
 
-          const jobTitle = app.job?.title || "Job Title";
-
-          // Default AI analysis
-          let ai = {
-            skills: [],
-            experience: "N/A",
-            matchScore: "N/A",
-            coverLetterScore: "N/A",
-            missingSkills: []
-          };
-
-          // Parse AI JSON safely
-          if (app.ai_analysis?.raw) {
-            try {
-              const cleaned = app.ai_analysis.raw.replace(/```json|```/g, "").trim();
-              const parsed = JSON.parse(cleaned);
-
-              ai = { ...ai, ...parsed };
-            } catch (e) {
-              console.warn("Failed to parse AI analysis:", e);
-            }
-          }
-
-          const skills = ai.skills?.length ? ai.skills.join(", ") : "N/A";
-          const experience = ai.experience || "N/A";
-          const matchScore = ai.matchScore !== undefined ? ai.matchScore : "N/A";
-          const coverLetterScore = ai.coverLetterScore !== undefined ? ai.coverLetterScore : "N/A";
-          const missingSkills = ai.missingSkills?.length ? ai.missingSkills.join(", ") : "None";
-          const missingSkillsClass = ai.missingSkills?.length ? "missing-skills" : "";
-
           box.innerHTML = `
-            <h3>${jobTitle}</h3>
+            <h3>${app.job?.title || "Job Title"}</h3>
+
             <p><strong>Skills:</strong> ${skills}</p>
             <p><strong>Experience:</strong> ${experience}</p>
-            <p><strong>Match Score (Resume):</strong> <span class="score">${matchScore}</span></p>
-            <p><strong>Cover Letter Score:</strong> <span class="score">${coverLetterScore}</span></p>
-            <p><strong>Missing Skills:</strong> <span class="${missingSkillsClass}">${missingSkills}</span></p>
-            <p>
+           
+            <p><strong>Missing Skills:</strong>
+              <span class="${missingSkills !== "None" ? "missing-skills" : ""}">${missingSkills}</span>
+            </p>
+
+            <button class="toggle-ai-btn">Show AI Analysis</button>
+            <div class="ai-analysis" style="display:none;">
+              <p><strong>Skill Analysis:</strong> ${skillsAnalysis}</p>
+              <p><strong>Experience Analysis:</strong> ${experienceAnalysis}</p>
+              <p><strong>Overall Analysis:</strong> ${overallAnalysis}</p>
+            </div>
+
+            <p style="margin-top:10px;">
               <button onclick="viewResume('${app.id}')">View Resume</button>
               <button onclick="viewCoverLetter('${app.id}')">View Cover Letter</button>
             </p>
@@ -155,20 +162,33 @@
           container.appendChild(box);
         });
 
+        // Add toggle logic after rendering
+        document.querySelectorAll(".toggle-ai-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const aiDiv = btn.nextElementSibling;
+            if (aiDiv.style.display === "none") {
+              aiDiv.style.display = "block";
+              btn.textContent = "Hide AI Analysis";
+            } else {
+              aiDiv.style.display = "none";
+              btn.textContent = "Show AI Analysis";
+            }
+          });
+        });
+
       } catch (err) {
         console.error(err);
         document.getElementById("applications").innerHTML = `<p style="color:red;">${err.message}</p>`;
       }
     }
 
-    // View Resume
+    // PDF preview
     async function viewResume(applicationId) {
       try {
         const res = await fetch(`${API_URL}/${applicationId}/resume`, {
           headers: { "Authorization": `Bearer ${JWT_TOKEN}` }
         });
         if (!res.ok) throw new Error("Failed to fetch resume");
-
         const data = await res.json();
         showPDF(data.url);
       } catch (err) {
@@ -176,14 +196,12 @@
       }
     }
 
-    // View Cover Letter
     async function viewCoverLetter(applicationId) {
       try {
         const res = await fetch(`${API_URL}/${applicationId}/coverLetter`, {
           headers: { "Authorization": `Bearer ${JWT_TOKEN}` }
         });
         if (!res.ok) throw new Error("Failed to fetch cover letter");
-
         const data = await res.json();
         showPDF(data.url);
       } catch (err) {
@@ -191,16 +209,15 @@
       }
     }
 
-    // Show PDF in iframe
     function showPDF(url) {
       const container = document.getElementById("pdfPreviewContainer");
       const iframe = document.getElementById("pdfPreview");
-      iframe.src = url; // PDF opens inline
+      iframe.src = url;
       container.style.display = "flex";
       container.scrollIntoView({ behavior: "smooth" });
     }
 
-    // Load on page load
+    // Load applications on page load
     loadApplications();
   </script>
 </body>
