@@ -1,5 +1,5 @@
 import express from "express"
-import * as jobpostingController from "../controllers/jobPostingController.js"
+import * as jobpostingController from "../controllers/jobpostingController.js"
 import { authenticate, authorize } from "../middlewares/auth.js"
 import { validateRequest, createJobSchema, updateJobSchema } from "../middlewares/validation.js"
 import { upload, handleImageUpload } from "../middlewares/uploadMiddleware.js"
