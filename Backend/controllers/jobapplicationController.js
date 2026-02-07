@@ -9,11 +9,15 @@ import { JobPosting } from "../models/JobPosting.js";
 import { Candidate } from "../models/Candidate.js";
 import { Profile } from "../models/Profile.js";
 import { User } from "../models/User.js";
+import { Recruiter} from "../models/Recruiter.js";
+import { ApplicationStatusHistory } from "../models/ApplicationStatusHistory.js";
+import { ApplicationWorkflow } from "../models/ApplicationWorkflow.js";
+
 import { asyncHandler } from "../middlewares/errorHandler.js";
 import { uploadImage, cloudinary, uploadPDF } from "../utils/cloudinary.js";
-import { APPLICATION_STATUS, NOTIFICATION_TYPES, USER_ROLES } from "../config/constants.js";
+import { APPLICATION_STATUS, WORKFLOW_STEP, NOTIFICATION_TYPES, USER_ROLES } from "../config/constants.js";
 import { createNotification } from "../services/notificationService.js";
-
+import { sendApplicationStatusEmail } from "../services/emailService.js";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
@@ -174,10 +178,20 @@ export const submitApplication = asyncHandler(async (req, res) => {
 
 
 // Update Application Status (Recruiter)
+// Map each application status to a workflow step
+const STATUS_TO_WORKFLOW_STEP = {
+  applied: WORKFLOW_STEP.SCREENING,
+  review: WORKFLOW_STEP.SCREENING,
+  interview: WORKFLOW_STEP.INTERVIEW,
+  offer: WORKFLOW_STEP.JOB_OFFER,
+  rejected: WORKFLOW_STEP.DECISION,
+  hired: WORKFLOW_STEP.DECISION,
+};
 
 export const updateApplicationStatus = asyncHandler(async (req, res) => {
-  const { status, rejection_reason } = req.body;
+  const { status, rejection_reason, notes } = req.body;
 
+  // Load application + job + candidate
   const application = await JobApplication.findByPk(req.params.id, {
     include: [
       { model: JobPosting, as: "job" },
@@ -190,33 +204,73 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
   });
 
   if (!application) return res.status(404).json({ error: "Application not found" });
+
+  // Authorization: only job owner (recruiter)
   if (application.job.postedBy !== req.user.id)
     return res.status(403).json({ error: "Not authorized" });
+
+  // Validate status
   if (!Object.values(APPLICATION_STATUS).includes(status))
     return res.status(400).json({ error: "Invalid status" });
 
+  // Check if status is already set
+  if (application.status === status)
+    return res.status(400).json({ error: "Status already set" });
+
+  const oldStatus = application.status;
+
+  // Prepare update payload
   const updates = { status };
   if (status === APPLICATION_STATUS.REJECTED) {
     updates.rejected_at = new Date();
     updates.rejection_reason = rejection_reason || null;
   }
 
+  // Update JobApplication
   await application.update(updates);
 
+  // Log status history
+  const recruiter = await Recruiter.findOne({ where: { user_id: req.user.id } });
+  if (!recruiter)
+    return res.status(400).json({ error: "Recruiter record not found. Cannot log history." });
+
+  await ApplicationStatusHistory.create({
+    application_id: application.id,
+    old_status: oldStatus,
+    new_status: status,
+    changed_by: recruiter.id,
+    notes: notes || rejection_reason || null,
+  });
+
+  // Log workflow step automatically based on status
+  const workflowStep = STATUS_TO_WORKFLOW_STEP[status] || WORKFLOW_STEP.DECISION;
+
+  await ApplicationWorkflow.create({
+    application_id: application.id,
+    step: workflowStep,
+    performed_by: recruiter.id,
+  });
+
+  // Notify candidate & send email
   const candidateUser = application.candidate?.profile?.user;
   if (candidateUser) {
     await createNotification({
       senderId: req.user.id,
       recipient: candidateUser,
       type: NOTIFICATION_TYPES.APPLICATION_STATUS_CHANGED,
-      content: `Your application status is now "${application.status}"`,
+      content: `Your application for "${application.job.title}" is now "${status}".`,
       application,
     });
+
+    await sendApplicationStatusEmail(candidateUser, application, status);
   }
 
-  res.status(200).json({ message: "Application status updated successfully", data: application });
+  // Response
+  res.status(200).json({
+    message: "Application status updated successfully",
+    data: application,
+  });
 });
-
 
 // Get Candidate Applications
 

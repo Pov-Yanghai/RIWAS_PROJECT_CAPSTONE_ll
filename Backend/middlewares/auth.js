@@ -24,10 +24,21 @@ export const authenticate = async (req, res, next) => {
   }
 }
 
+// export const authorize = (...roles) => {
+//   return (req, res, next) => {
+//     console.log("ALLOWED ROLES:", roles)
+//     console.log("USER ROLE:", req.user?.role)
+//     next()
+//   }
+// }
 export const authorize = (...roles) => {
   return (req, res, next) => {
-    console.log("ALLOWED ROLES:", roles)
-    console.log("USER ROLE:", req.user?.role)
-    next()
-  }
-}
+    if (!req.user)
+      return res.status(401).json({ error: "Unauthorized" });
+
+    if (!roles.includes(req.user.role))
+      return res.status(403).json({ error: "Forbidden: Access denied" });
+
+    next();
+  };
+};
