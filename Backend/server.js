@@ -96,7 +96,7 @@ app.use(errorHandler);
 
     // Start server
     const server = app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT} [${ENV}]`);
+      console.log(`Server running on http://localhost:${PORT} [${ENV}]`);
     });
 
     // Graceful shutdown
