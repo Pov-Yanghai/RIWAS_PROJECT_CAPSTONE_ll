@@ -24,6 +24,9 @@ import userskillRoutes from "./routes/userskillRoutes.js";
 
 import scoreattributeRoutes from "./routes/scoreattributeRoutes.js";
 import scoretemplateRoutes from "./routes/scoretemplateRoutes.js";
+
+// added more 
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 // Middleware imports
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { requestValidator } from "./middlewares/requestValidator.js";
@@ -93,6 +96,8 @@ app.use("/api/matrix-scores", matrixscoreRoutes);
 // update 2 
 app.use("/api/attributes", scoreattributeRoutes);
 app.use("/api/templates", scoretemplateRoutes);
+// update 3 
+app.use("/api/dashboard", dashboardRoutes);
 
 // --------------------
 // 404 Handler
