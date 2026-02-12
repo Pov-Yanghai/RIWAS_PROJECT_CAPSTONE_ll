@@ -21,6 +21,7 @@ function App() {
         
         {/* Auth Routes */}
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/inputresume" element={<InputResume />} />
         <Route path="/login" element={<Login />} />
         
         {/* User & Settings Routes */}
