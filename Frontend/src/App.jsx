@@ -11,6 +11,19 @@ import PostJob from "./pages/PostJob";
 import MatrixPage from "./pages/MatrixPage";
 import EditProfile from "./pages/EditPage";
 import JobDetailView from "./pages/JobDetailView";
+import InputResume from "./pages/InputResume";
+
+// Sana Candidate Pages import 
+import Layout from "./components/Layout";
+import LandingPage from "./pages/candidatePages/LandingPage";
+import ProfileCandidatePage from "./pages/candidatePages/ProfileCandidatePage";
+import CVPage from "./pages/candidatePages/CVPage";
+import UploadCV from "./pages/candidatePages/UploadCV";
+import ViewJobsPage from "./pages/candidatePages/ViewJobsPage";
+import JobDetails from "./pages/candidatePages/JobDetails";
+import ApplyJob from "./pages/candidatePages/ApplyJob";
+import ApplicationPage from "./pages/candidatePages/ApplicationPage";
+import Notifications from "./pages/candidatePages/Notifications";
 
 function App() {
   return (
@@ -39,6 +52,18 @@ function App() {
         <Route path="/matrix-page" element={<MatrixPage />} />
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/job-detail/:id" element={<JobDetailView />} />
+
+         {/* Sana Candidate Routes */}
+        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/uploadcv" element={<UploadCV />} />
+        <Route path="/profile" element={<Layout><ProfileCandidatePage /></Layout>} />
+        <Route path="/cv" element={<Layout><CVPage /></Layout>} />
+        <Route path="/view-jobs" element={<Layout><ViewJobsPage /></Layout>} />
+        <Route path="/job-details/:jobId" element={<Layout><JobDetails /></Layout>} />
+        <Route path="/apply-job/:jobId" element={<Layout><ApplyJob /></Layout>} />
+        <Route path="/application" element={<Layout><ApplicationPage /></Layout>} />
+        <Route path="/notifications" element={<Layout><Notifications /></Layout>} />
+      
       </Routes>
     </BrowserRouter>
   );
