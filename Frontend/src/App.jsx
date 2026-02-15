@@ -11,6 +11,7 @@ import PostJob from "./pages/PostJob";
 import MatrixPage from "./pages/MatrixPage";
 import EditProfile from "./pages/EditPage";
 import JobDetailView from "./pages/JobDetailView";
+import InputResume from "./pages/InputResume"
 import InputResume from "./pages/InputResume";
 
 // Sana Candidate Pages import 
