@@ -1,24 +1,97 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SideBar from "../components/SideBar";
 
 export default function ProfilePage() {
+  const [id, setId] = useState("");
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // State for Account Details - will be updated from API
+  const [profile, setProfile] = useState({
+    fullName: "Loading...",
+    email: "",
+    phone: "",
+    role: "",
+    avatarUrl: ""
+  });
+
+  useEffect(() => {
+    // Get user data from localStorage
+    const currentUser = localStorage.getItem("currentUser");
+    if (currentUser) {
+      const user = JSON.parse(currentUser);
+      setId(user.id);
+      console.log("User ID:", user.id);
+      
+      // Set initial profile from localStorage user data
+      setProfile({
+        fullName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+        email: user.email || "",
+        phone: user.phoneNumber || "",
+        role: user.role || "",
+        avatarUrl: user.profilePicture || ""
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!id) return;
+      
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch(`http://localhost:5000/api/profiles/${id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { "Authorization": `Bearer ${token}` })
+          }
+        });
+        
+        if (res.status === 404) {
+          // Profile not found - use localStorage data
+          console.log("Profile not found, using localStorage data");
+          setLoading(false);
+          return;
+        }
+        
+        if (!res.ok) {
+          throw new Error("Failed to fetch profile");
+        }
+        
+        const result = await res.json();
+        console.log("Profile data:", result);
+        
+        // Extract profile and user data from response
+        const profileData = result.data;
+        const userData = profileData?.user;
+        
+        if (profileData) {
+          setProfile({
+            fullName: `${userData?.firstName || ""} ${userData?.lastName || ""}`.trim(),
+            email: userData?.email || "",
+            phone: userData?.phoneNumber || "",
+            role: profileData?.headline || profileData?.bio || userData?.role || "",
+            avatarUrl: profileData?.avatarUrl || userData?.profilePicture || ""
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProfile();
+  }, [id]);
 
   // State for Team Management
   const [teamMembers, setTeamMembers] = useState([
     { id: 1, name: "Vorn Sina", email: "vorn.sina@example.com", role: "Senior Data Scientist", access: "Super Admin" },
     { id: 2, name: "Keo Socheata", email: "socheata.k@example.com", role: "HR Analyst", access: "Admin" }
   ]);
-
-  // State for Account Details (Static or fetched)
-  const [profile] = useState({
-    fullName: "Eng Mengeang",
-    email: "mengeangeng@gmail.com",
-    phone: "+855 987 654 321",
-    role: "HR Manager"
-  });
 
   // State for Invite Modal Inputs
   const [newMember, setNewMember] = useState({ name: "", email: "", role: "", access: "Member" });
@@ -55,7 +128,10 @@ export default function ProfilePage() {
             <div className=" bg-white  border-slate-100 flex justify-between items-center">
               <div className="flex items-center gap-6">
                 <div className="w-20 h-20 rounded-[28px] bg-slate-900 overflow-hidden border-4 border-slate-50 shadow-sm">
-                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mengeang" alt="profile" />
+                  <img 
+                    src={profile.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.fullName}`} 
+                    alt="profile" 
+                  />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-slate-900">{profile.fullName}</h1>
