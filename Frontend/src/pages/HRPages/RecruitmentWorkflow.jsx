@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SideBar from "../components/SideBar";
+import SideBar from "../../components/SideBar";
 
 const stepTypes = [
   { name: "Application", color: "bg-blue-500" },
@@ -11,6 +11,15 @@ const stepTypes = [
   { name: "Decision", color: "bg-indigo-500" },
   { name: "Job Offer", color: "bg-green-500" },
 ];
+
+  // Styles
+  const btnBase = "h-11 px-8 rounded-xl font-bold text-sm transition-all flex items-center justify-center active:scale-95";
+  const btnDark = `${btnBase} bg-slate-900 text-white hover:bg-slate-800 shadow-md w-auto px-6`;
+  const btnSecondary = `${btnBase} bg-white border border-slate-200 text-slate-700 hover:bg-slate-50`;
+  const btnSave = `${btnBase} bg-green-600 text-white hover:bg-green-700 shadow-md`;
+  const inputDisplay = "h-11 flex items-center w-full px-4 bg-slate-50 border border-slate-100 rounded-xl text-slate-600 font-medium text-sm";
+  const inputEdit = "h-11 flex items-center w-full px-4 bg-white border-2 border-blue-400 rounded-xl text-slate-900 font-medium text-sm focus:outline-none";
+
 
 export default function RecruitmentWorkflow() {
   const navigate = useNavigate();
@@ -72,7 +81,7 @@ export default function RecruitmentWorkflow() {
           <h2 className="text-2xl font-bold text-gray-800">Recruitment Process Workflow</h2>
           <button
             onClick={() => mode === "list" ? navigate(-1) : setMode("list")}
-            className="bg-white border px-6 py-2 rounded-xl hover:bg-gray-50 font-medium shadow-sm"
+            className={btnSecondary}
           >
             Back
           </button>
@@ -108,8 +117,8 @@ export default function RecruitmentWorkflow() {
                       </button>
                     )}
                   </div>
-                  <button onClick={() => { setMode("create"); setNewWorkflowName(""); setSelectedSteps([]); }} className="bg-green-500 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-green-600 shadow-lg shadow-green-100">
-                    + Add Workflow
+                  <button onClick={() => { setMode("create"); setNewWorkflowName(""); setSelectedSteps([]); }} className={btnDark}>
+                    Add Workflow
                   </button>
                 </div>
 
@@ -185,9 +194,9 @@ export default function RecruitmentWorkflow() {
                   ))}
                 </div>
                 
-                <div className="flex gap-4">
-                  <button onClick={() => setMode("list")} className="flex-1 py-4 border rounded-2xl font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
-                  <button onClick={saveWorkflow} className="flex-1 py-4 bg-green-500 text-white rounded-2xl font-black shadow-lg shadow-green-100">Save Workflow</button>
+                <div className="flex gap-4 justify-end">
+                  <button onClick={() => setMode("list")} className={btnSecondary}>Cancel</button>
+                  <button onClick={saveWorkflow} className={btnDark}>Save Workflow</button>
                 </div>
               </div>
             )}
