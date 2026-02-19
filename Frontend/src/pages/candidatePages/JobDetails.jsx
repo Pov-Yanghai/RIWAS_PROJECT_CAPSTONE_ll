@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaBriefcase } from 'react-icons/fa';
-import { jobsData } from '../../data/jobsData';
+import jobsData from '../../data/jobsData';
 
 const JobDetails = () => {
   const { jobId } = useParams();
