@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { jobsData } from '../../data/jobsData';
+import jobsData  from '../../data/jobsData';
 
 const ApplyJob = () => {
   const { jobId } = useParams();

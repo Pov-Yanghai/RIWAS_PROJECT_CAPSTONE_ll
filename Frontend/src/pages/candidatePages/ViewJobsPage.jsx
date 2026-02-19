@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaUser, FaFileAlt, FaBriefcase, FaBell, FaSignOutAlt } from 'react-icons/fa';
-import { jobsData } from '../../data/jobsData';
+import jobsData from '../../data/jobsData';
 
 const ViewJobs = () => {
   const navigate = useNavigate();

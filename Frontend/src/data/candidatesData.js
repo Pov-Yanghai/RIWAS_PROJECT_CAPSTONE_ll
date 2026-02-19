@@ -1,0 +1,153 @@
+const candidatesData = [
+  {
+    id: 1,
+    name: 'Touch Sopheak',
+    position: 'Frontend Developer',
+    department: 'IT',
+    stage: 'References',
+    appliedDate: '2025-11-15',
+    currentStageDate: '2025-12-10',
+    status: 'shortlisted',
+    avatar: '👨‍💻',
+    email: 'touch.sopheak@email.com',
+    phone: '+855 12 345 678',
+    score: 4.5
+  },
+  {
+    id: 2,
+    name: 'Keo Veasna',
+    position: 'Frontend Developer',
+    department: 'IT',
+    stage: 'Screening',
+    appliedDate: '2025-12-01',
+    currentStageDate: '2025-12-05',
+    status: 'In progress',
+    avatar: '👩‍💼',
+    email: 'keo.veasna@email.com',
+    phone: '+855 98 765 432',
+    score: 3.8
+  },
+  {
+    id: 3,
+    name: 'Sok Dara',
+    position: 'Senior Software Engineer',
+    department: 'Engineering',
+    stage: 'Decision',
+    appliedDate: '2025-11-20',
+    currentStageDate: '2025-12-12',
+    status: 'shortlisted',
+    avatar: '👨‍🔧',
+    email: 'sok.dara@email.com',
+    phone: '+855 11 222 333',
+    score: 4.8
+  },
+  {
+    id: 4,
+    name: 'Eng Mengeang',
+    position: 'Senior Software Engineer',
+    department: 'Engineering',
+    stage: 'Interview',
+    appliedDate: '2025-12-05',
+    currentStageDate: '2025-12-08',
+    status: 'In progress',
+    avatar: '👨‍🎓',
+    email: 'eng.mengeang@email.com',
+    phone: '+855 70 111 222',
+    score: 4.2
+  },
+  {
+    id: 5,
+    name: 'Chan Sokha',
+    position: 'Product Manager',
+    department: 'Product',
+    stage: 'Assessment',
+    appliedDate: '2025-11-25',
+    currentStageDate: '2025-12-09',
+    status: 'In progress',
+    avatar: '👩‍💻',
+    email: 'chan.sokha@email.com',
+    phone: '+855 92 333 444',
+    score: 4.0
+  },
+  {
+    id: 6,
+    name: 'Pov Srey',
+    position: 'Product Manager',
+    department: 'Product',
+    stage: 'Job Offer',
+    appliedDate: '2025-10-15',
+    currentStageDate: '2025-12-01',
+    status: 'shortlisted',
+    avatar: 'PS',
+    email: 'pov.srey@email.com',
+    phone: '+855 88 555 666',
+    score: 4.7
+  },
+  {
+    id: 7,
+    name: 'Ly Pheaktra',
+    position: 'UX Designer',
+    department: 'Design',
+    stage: 'Interview',
+    appliedDate: '2025-12-01',
+    currentStageDate: '2025-12-10',
+    status: 'In progress',
+    avatar: 'LP',
+    email: 'ly.pheaktra@email.com',
+    phone: '+855 99 777 888',
+    score: 4.3
+  },
+  {
+    id: 8,
+    name: 'Heng Virak',
+    position: 'UX Designer',
+    department: 'Design',
+    stage: 'References',
+    appliedDate: '2025-11-28',
+    currentStageDate: '2025-12-11',
+    status: 'shortlisted',
+    avatar: 'HV',
+    email: 'heng.virak@email.com',
+    phone: '+855 77 999 000',
+    score: 4.6
+  },
+  {
+    id: 9,
+    name: 'Mao Chanthy',
+    position: 'Senior Software Engineer',
+    department: 'Engineering',
+    stage: 'Application',
+    appliedDate: '2025-12-10',
+    currentStageDate: '2025-12-10',
+    status: 'In progress',
+    avatar: 'MC',
+    email: 'mao.chanthy@email.com',
+    phone: '+855 66 111 222',
+    score: 3.5
+  },
+  {
+    id: 10,
+    name: 'Noun Sreymom',
+    position: 'Frontend Developer',
+    department: 'IT',
+    stage: 'Screening',
+    appliedDate: '2025-12-08',
+    currentStageDate: '2025-12-12',
+    status: 'In progress',
+    avatar: 'NS',
+    email: 'noun.sreymom@email.com',
+    phone: '+855 55 333 444',
+    score: 3.9
+  }
+];
+
+// Hired candidates (for calculating metrics)
+export const hiredCandidates = [
+  { name: 'Kim Sothea', position: 'Frontend Developer', hiredDate: '2025-11-01', applicationDate: '2025-10-10', offerAccepted: true },
+  { name: 'Rath Borey', position: 'Senior Software Engineer', hiredDate: '2025-11-15', applicationDate: '2025-10-01', offerAccepted: true },
+  { name: 'Chea Vanna', position: 'Product Manager', hiredDate: '2025-12-01', applicationDate: '2025-11-05', offerAccepted: true },
+  { name: 'Lim Sokun', position: 'UX Designer', hiredDate: '2025-12-05', applicationDate: '2025-11-10', offerAccepted: true },
+  { name: 'Tep Molika', position: 'Frontend Developer', hiredDate: '2025-12-08', applicationDate: '2025-11-15', offerAccepted: false },
+];
+
+export default candidatesData;
