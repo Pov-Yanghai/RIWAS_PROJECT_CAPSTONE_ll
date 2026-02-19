@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import SideBar from "../components/SideBar";
+import SideBar from "../../components/SideBar";
 
 export default function JobList() {
   const navigate = useNavigate();
@@ -15,28 +15,31 @@ export default function JobList() {
       type: "Part-Time",
       salary: "$120/hr",
       posted: "5 days ago",
+      deadline: "Aug 30, 2026",
       applications: 48 
     },
     {
       id: 2,
       title: "Graphic Designer",
       company: "Google",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Logo.svg",
+      logo: "https://www.startpage.com/av/proxy-image?piurl=https%3A%2F%2Fstatic.vecteezy.com%2Fsystem%2Fresources%2Fpreviews%2F011%2F598%2F471%2Foriginal%2Fgoogle-logo-icon-illustration-free-vector.jpg&sp=1771400852T7e4d9c36b1a7d65d3f39fecf78ff61473a6f4315dc0b2067594a14e1a8d96d36",
       location: "Kochi, India",
       type: "Part-Time",
       salary: "$150-220k",
       posted: "30 days ago",
+      deadline: "Aug 30, 2026",
       applications: 124
     },
     {
       id: 3,
       title: "Senior Motion Designer",
       company: "Dribbble",
-      logo: "https://upload.wikimedia.org/wikipedia/commons/3/32/Dribbble_logo.svg",
+      logo: "https://www.startpage.com/av/proxy-image?piurl=https%3A%2F%2Fstatic.vecteezy.com%2Fsystem%2Fresources%2Fpreviews%2F012%2F660%2F867%2Foriginal%2Fdribbble-logo-on-transparent-isolated-background-free-vector.jpg&sp=1771400896T318838df13f15a9739fcc70b6bf33f0ddf97a163ea59d8e8e6aad6f8111ab7af",
       location: "Chennai, India",
       type: "Contract",
       salary: "$85/hr",
       posted: "10 days ago",
+      deadline: "Aug 30, 2026",
       applications: 12
     },
   ];
@@ -50,7 +53,6 @@ export default function JobList() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-800">Job Postings</h1>
-            <p className="text-slate-400 text-xs font-medium">You have {jobs.length} active listings</p>
           </div>
           {/* Create New Button Style */}
           <button 
@@ -94,10 +96,11 @@ export default function JobList() {
         </div>
 
         {/* List Header Labels */}
-        <div className="grid grid-cols-12 gap-4 px-6 mb-3">
+        <div className="grid grid-cols-14 gap-4 px-6 mb-3">
           <div className="col-span-5 text-[10px] font-black uppercase tracking-widest text-slate-300">Role & Company</div>
           <div className="col-span-2 text-[10px] font-black uppercase tracking-widest text-slate-300">Applications</div>
           <div className="col-span-2 text-[10px] font-black uppercase tracking-widest text-slate-300">Salary</div>
+          <div className="col-span-2 text-[10px] font-black uppercase tracking-widest text-slate-300">Deadline</div>
           <div className="col-span-3 text-[10px] font-black uppercase tracking-widest text-slate-300 text-right">Actions</div>
         </div>
 
@@ -107,7 +110,7 @@ export default function JobList() {
             <div 
               key={job.id} 
               onClick={() => navigate(`/job-detail/${job.id}`)}
-              className="group grid grid-cols-12 gap-4 items-center bg-white border border-slate-50 rounded-[24px] p-5 hover:border-green-300 hover:shadow-md transition-all cursor-pointer"
+              className="group grid grid-cols-14 gap-4 items-center bg-white border border-slate-50 rounded-[24px] p-5 hover:border-green-300 hover:shadow-md transition-all cursor-pointer"
             >
               <div className="col-span-5 flex items-center gap-4">
                 <div className="w-12 h-12 flex-shrink-0 bg-slate-50 rounded-xl p-2.5 border border-slate-100 group-hover:bg-white transition-colors">
@@ -131,12 +134,16 @@ export default function JobList() {
                 {job.salary}
               </div>
 
+              <div className="col-span-2 text-sm font-black text-slate-700">
+                {job.deadline}
+              </div>
+
               <div className="col-span-3 flex justify-end gap-3" onClick={(e) => e.stopPropagation()}>
                 <button 
                   onClick={() => navigate(`/job-detail/${job.id}`)}
                   className="px-5 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-100 rounded-xl transition-all border border-slate-100"
                 >
-                  Manage
+                  Edit
                 </button>
                 <button className="p-2 text-slate-300 hover:text-red-500 transition-colors">
                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
