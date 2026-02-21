@@ -1,519 +1,246 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FaUser, FaFileAlt, FaBell, FaClipboardList, FaSignOutAlt, FaEye, FaTrash, FaPlus, FaTimes } from 'react-icons/fa';
+import React, { useRef, useState } from "react";
+import { FaCamera, FaPlus, FaTimes } from "react-icons/fa";
 
-const Profile = () => {
+const ProfileCandidate = () => {
+  const fileInputRef = useRef(null);
+  const [profileImage, setProfileImage] = useState(
+    "https://via.placeholder.com/150"
+  );
+
   const [isEditing, setIsEditing] = useState(false);
-  const [viewingFile, setViewingFile] = useState(null);
-  
+
+  const [profile, setProfile] = useState({
+    fullName: "Eng Mengeang",
+    email: "mengeang@example.com",
+    phone: "+855 987 654 321",
+    role: "Candidate",
+    bio:
+      "Over the past 70 years as a member of the United Nations, Cambodia has actively contributed to the maintenance of international peace and security, promoted international cooperation under international law, advanced economic development, participated in interventions to resolve conflicts among member states, and helped prevent the outbreak of world wars."
+  });
+
   const [attachments, setAttachments] = useState([
-    { id: 1, name: 'Eng_Mengeang_Resume.pdf', url: '/sample-resume.pdf' }
+    { id: 1, name: "Eng_Mengeang_Resume.pdf", url: "/sample-resume.pdf" },
   ]);
 
-  const [profileData, setProfileData] = useState({
-    fullName: 'Eng Mengeang',
-    email: 'mengeangeng@gmail.com',
-    phone: '+855 987 654 321',
-    role: 'Candidate',
-    bio: 'Over the past 70 years as a member of the United Nations, Cambodia has actively contributed to the maintenance of international peace and security, promoted international cooperation under international law, advanced economic development, participated in interventions to resolve conflicts among member states, and helped prevent the outbreak of world wars.',
-    createdAt: '21 Nov 2025'
-  });
+  const [viewingAttachment, setViewingAttachment] = useState(null);
 
-  // Complete CV data state matching your screenshots
-  const [cvData] = useState({
-    name: 'Eng Mengeang',
-    title: 'Data Science Student Phnom Penh, Cambodia',
-    contact: 'mengeang@example.com | +855 12 345 678',
-    linkedin: 'LinkedIn | Portfolio',
-    
-    summary: 'Motivated Data Science student passionate about exploring new technologies, learning continuously, and building innovative projects. Strong problem-solving mindset and committed to improving team efficiency through research and skill development.',
-    
-    education: [
-      {
-        degree: 'Bachelor of Science in Data Science',
-        institution: 'Institute of Technology of Cambodia',
-        period: '2023 – Expected 2027',
-        achievements: [
-          'Built AI-based fitness optimization project',
-          'Led Agile software development study group'
-        ]
-      }
-    ],
-    
-    experience: [
-      {
-        title: 'Data Analyst Intern',
-        company: 'TechLab Cambodia',
-        period: 'June 2024 – August 2024',
-        responsibilities: [
-          'Analyzed datasets using Python (Pandas, NumPy)',
-          'Created visual dashboards with Tableau',
-          'Presented insights to improve customer engagement'
-        ]
-      },
-      {
-        title: 'Exhibition Team Member',
-        company: 'University Air & Tech Show',
-        period: 'October 2024 – Present',
-        responsibilities: [
-          'Designed and managed tech demo displays',
-          'Collaborated with team to optimize visitor experience'
-        ]
-      }
-    ],
-    
-    projects: [
-      {
-        name: 'AI for Fitness Growth',
-        description: 'Developed a system for performance optimization and flexible scheduling using Python and React.',
-        technologies: 'Python, Flask, React, Machine Learning',
-        link: 'https://github.com/mengeang/ai-fitness-growth'
-      },
-      {
-        name: 'Job Recommendation System',
-        description: 'Built a recommendation engine that suggests jobs based on user skills and experience.',
-        technologies: 'PostgreSQL, Node.js, React',
-        link: 'https://github.com/mengeang/job-recommender'
-      }
-    ],
-    
-    skills: {
-      softSkills: 'Teamwork, Problem Solving, Adaptability, Time Management',
-      tools: 'Git, Tableau, PostgreSQL, VS Code',
-      frameworks: 'React, Flask, Node.js',
-      programming: 'Python, JavaScript, SQL, R'
-    },
-    
-    certifications: [
-      {
-        name: 'CCNA Final Exam',
-        issuer: 'Cisco Networking Academy',
-        year: '2024'
-      }
-    ],
-    
-    extracurricular: [
-      {
-        role: 'Event Organizer',
-        organization: 'High School Alumni Meeting',
-        year: '2022',
-        description: 'Helped organize and coordinate alumni event for grade A students.'
-      }
-    ],
-    
-    languages: [
-      { name: 'Khmer', level: 'Native' },
-      { name: 'English', level: 'Professional' }
-    ]
-  });
-
-  const [tempProfileData, setTempProfileData] = useState({ ...profileData });
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setTempProfileData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  // IMAGE
+  const handleImageClick = () => fileInputRef.current.click();
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) setProfileImage(URL.createObjectURL(file));
   };
 
-  const handleSaveChanges = () => {
-    setProfileData({ ...tempProfileData });
-    setIsEditing(false);
-  };
-
-  const handleCancelEdit = () => {
-    setTempProfileData({ ...profileData });
-    setIsEditing(false);
-  };
-
+  // ATTACHMENTS
   const handleAddAttachment = (e) => {
     const files = Array.from(e.target.files);
     const newAttachments = files.map((file, index) => ({
       id: attachments.length + index + 1,
       name: file.name,
-      file: file,
-      url: URL.createObjectURL(file)
+      url: URL.createObjectURL(file),
     }));
     setAttachments([...attachments, ...newAttachments]);
   };
-
-  const handleDeleteAttachment = (id) => {
-    setAttachments(attachments.filter(att => att.id !== id));
+  const handleDeleteAttachment = (id) =>
+    setAttachments(attachments.filter((att) => att.id !== id));
+  const handlePreviewAttachment = (att) => window.open(att.url, "_blank");
+  const handleViewAttachment = (att) => {
+    window.open(`/cvNoSidebar?attachment=${att.id}`, "_blank");
   };
 
-  const handleViewAttachment = (attachment) => {
-    setViewingFile(attachment);
-  };
+  // EDIT / SAVE
+  const handleEditToggle = () => setIsEditing(!isEditing);
+  const handleInputChange = (e) =>
+    setProfile({ ...profile, [e.target.name]: e.target.value });
 
-  const handleCloseViewer = () => {
-    setViewingFile(null);
-  };
-
-  // Render CV content as HTML
-  const renderCVContent = () => {
-    return (
-      <div className="bg-white p-8 max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{cvData.name}</h1>
-          <p className="text-lg text-gray-600 mb-2">{cvData.title}</p>
-          <p className="text-sm text-gray-600">{cvData.contact}</p>
-          <p className="text-sm text-blue-600">{cvData.linkedin}</p>
-        </div>
-
-        {/* Summary */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-3 border-b-2 border-gray-300 pb-2">SUMMARY</h2>
-          <p className="text-gray-700 leading-relaxed">{cvData.summary}</p>
-        </div>
-
-        {/* Education */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-3 border-b-2 border-gray-300 pb-2">EDUCATION</h2>
-          {cvData.education.map((edu, index) => (
-            <div key={index} className="mb-4">
-              <h3 className="font-bold text-gray-900">{edu.degree}</h3>
-              <p className="text-gray-700">{edu.institution}</p>
-              <p className="text-sm text-gray-600 mb-2">{edu.period}</p>
-              <p className="font-semibold text-gray-800">Achievements:</p>
-              <ul className="list-disc list-inside text-gray-700">
-                {edu.achievements.map((achievement, idx) => (
-                  <li key={idx}>{achievement}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        {/* Experience */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-3 border-b-2 border-gray-300 pb-2">EXPERIENCE</h2>
-          {cvData.experience.map((exp, index) => (
-            <div key={index} className="mb-4">
-              <h3 className="font-bold text-gray-900">{exp.title} – {exp.company}</h3>
-              <p className="text-sm text-gray-600 mb-2">{exp.period}</p>
-              <ul className="list-disc list-inside text-gray-700">
-                {exp.responsibilities.map((resp, idx) => (
-                  <li key={idx}>{resp}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        {/* Projects */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-3 border-b-2 border-gray-300 pb-2">PROJECTS</h2>
-          {cvData.projects.map((project, index) => (
-            <div key={index} className="mb-4">
-              <h3 className="font-bold text-gray-900">{project.name}</h3>
-              <p className="text-gray-700 mb-1">{project.description}</p>
-              <p className="text-sm text-gray-600 mb-1">
-                <span className="font-semibold">Technologies:</span> {project.technologies}
-              </p>
-              <p className="text-sm text-blue-600">
-                <span className="font-semibold">Link:</span> {project.link}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Skills */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-3 border-b-2 border-gray-300 pb-2">SKILLS</h2>
-          <table className="w-full border border-gray-300">
-            <tbody>
-              <tr className="border-b border-gray-300">
-                <td className="font-semibold text-gray-900 p-2 border-r border-gray-300 bg-gray-50">Soft Skills</td>
-                <td className="text-gray-700 p-2">{cvData.skills.softSkills}</td>
-              </tr>
-              <tr className="border-b border-gray-300">
-                <td className="font-semibold text-gray-900 p-2 border-r border-gray-300 bg-gray-50">Tools</td>
-                <td className="text-gray-700 p-2">{cvData.skills.tools}</td>
-              </tr>
-              <tr className="border-b border-gray-300">
-                <td className="font-semibold text-gray-900 p-2 border-r border-gray-300 bg-gray-50">Frameworks</td>
-                <td className="text-gray-700 p-2">{cvData.skills.frameworks}</td>
-              </tr>
-              <tr>
-                <td className="font-semibold text-gray-900 p-2 border-r border-gray-300 bg-gray-50">Programming</td>
-                <td className="text-gray-700 p-2">{cvData.skills.programming}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Certifications */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-3 border-b-2 border-gray-300 pb-2">CERTIFICATIONS</h2>
-          {cvData.certifications.map((cert, index) => (
-            <p key={index} className="text-gray-700">
-              {cert.name} – {cert.issuer} ({cert.year})
-            </p>
-          ))}
-        </div>
-
-        {/* Extracurricular */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-3 border-b-2 border-gray-300 pb-2">EXTRACURRICULAR</h2>
-          {cvData.extracurricular.map((activity, index) => (
-            <div key={index} className="mb-3">
-              <h3 className="font-bold text-gray-900">{activity.role} – {activity.organization} ({activity.year})</h3>
-              <p className="text-gray-700">{activity.description}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Languages */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-3 border-b-2 border-gray-300 pb-2">LANGUAGES</h2>
-          {cvData.languages.map((lang, index) => (
-            <p key={index} className="text-gray-700">
-              {lang.name} – {lang.level}
-            </p>
-          ))}
-        </div>
-      </div>
-    );
+  // LOGOUT
+  const handleLogout = () => {
+    alert("Logged out!");
   };
 
   return (
     <>
-      {!viewingFile ? (
-        <div className="p-8">
-          <div className="max-w-4xl mx-auto">
-            {/* Header */}
-            <div className="flex justify-between items-start mb-6">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white text-2xl font-bold">
-                  {profileData.fullName.split(' ').map(n => n[0]).join('')}
+      {/* Google Fonts Roboto */}
+      <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+        rel="stylesheet"
+      />
+      <div className="font-['Roboto']">
+        {!viewingAttachment ? (
+          <div className="flex min-h-screen bg-gray-100">
+            <div className="flex-1 p-8 bg-gray-50">
+              {/* HEADER */}
+              <div className="flex flex-col md:flex-row md:items-center md:gap-6 gap-4">
+                <div
+                  className="relative w-32 h-32 cursor-pointer"
+                  onClick={handleImageClick}
+                >
+                  <img
+                    src={profileImage}
+                    alt="profile"
+                    className="w-full h-full object-cover rounded-full border-4 border-white"
+                  />
+                  <div className="absolute bottom-2 right-2 w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center">
+                    <FaCamera />
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{profileData.fullName}</h2>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-xs font-medium">
-                      Candidate
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  hidden
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-2xl font-semibold">{profile.fullName}</h2>
+                    <span className="bg-pink-200 text-pink-800 px-3 py-1 rounded-full text-sm">
+                      {profile.role}
                     </span>
                   </div>
-                  <p className="text-gray-600 mt-1">{profileData.email}</p>
-                  <p className="text-gray-500 text-sm">Created at {profileData.createdAt}</p>
+                  <p className="text-gray-600">{profile.email}</p>
+                  <p className="text-gray-400 text-sm">Created at 21 Nov 2025</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                {/* Edit Profile Button */}
-                {!isEditing && (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium"
-                  >
-                    Edit Profile
-                  </button>
-                )}
-              </div>
-            </div>
+              <hr className="my-6 border-gray-300" />
 
-            {/* Personal Information Card */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Personal Information</h3>
-              
-              <div className="grid md:grid-cols-2 gap-4">
+              {/* PERSONAL INFORMATION */}
+              <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="fullName"
-                      value={tempProfileData.fullName}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  ) : (
-                    <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-900">
-                      {profileData.fullName}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="email"
-                      name="email"
-                      value={tempProfileData.email}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  ) : (
-                    <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-900">
-                      {profileData.email}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={tempProfileData.phone}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                  ) : (
-                    <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-900">
-                      {profileData.phone}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Role
-                  </label>
-                  <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-900">
-                    {profileData.role}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Bio
-                </label>
-                {isEditing ? (
-                  <textarea
-                    name="bio"
-                    value={tempProfileData.bio}
+                  <label className="text-gray-600 text-sm">FULL Name</label>
+                  <input
+                    name="fullName"
+                    value={profile.fullName}
+                    disabled={!isEditing}
                     onChange={handleInputChange}
-                    rows="4"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                    className="w-full mt-1 p-2 border rounded-md border-gray-300"
                   />
-                ) : (
-                  <p className="px-3 py-2 bg-gray-50 rounded-lg text-gray-900 leading-relaxed">
-                    {profileData.bio}
-                  </p>
-                )}
+                </div>
+                <div>
+                  <label className="text-gray-600 text-sm">Email</label>
+                  <input
+                    name="email"
+                    value={profile.email}
+                    disabled={!isEditing}
+                    onChange={handleInputChange}
+                    className="w-full mt-1 p-2 border rounded-md border-gray-300"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-600 text-sm">Phone Number</label>
+                  <input
+                    name="phone"
+                    value={profile.phone}
+                    disabled={!isEditing}
+                    onChange={handleInputChange}
+                    className="w-full mt-1 p-2 border rounded-md border-gray-300"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-600 text-sm">Role</label>
+                  <input
+                    name="role"
+                    value={profile.role}
+                    disabled
+                    className="w-full mt-1 p-2 border rounded-md border-gray-300 bg-gray-100"
+                  />
+                </div>
               </div>
 
-              {isEditing && (
-                <div className="flex justify-end gap-3 mt-6">
-                  <button
-                    onClick={handleCancelEdit}
-                    className="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={handleSaveChanges}
-                    className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
-                  >
-                    Save Changes
-                  </button>
-                </div>
-              )}
-            </div>
+              <div className="mt-6">
+                <label className="text-gray-600 text-sm">Bio</label>
+                <textarea
+                  name="bio"
+                  rows="4"
+                  disabled={!isEditing}
+                  value={profile.bio}
+                  onChange={handleInputChange}
+                  className="w-full mt-1 p-2 border rounded-md border-gray-300"
+                />
+              </div>
 
-            {/* Attachment Section */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">Attachment</h3>
-                <label className="cursor-pointer">
+              <div className="mt-6 flex flex-col md:flex-row gap-4">
+                <button
+                  onClick={handleEditToggle}
+                  className="bg-green-600 text-white px-6 py-2 rounded-md"
+                >
+                  {isEditing ? "Save" : "Edit"}
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="bg-green-600 text-white px-6 py-2 rounded-md"
+                >
+                  Logout
+                </button>
+              </div>
+
+              {/* ATTACHMENTS */}
+              <div className="mt-10 flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Attachment</h3>
+                <label className="bg-gray-200 px-3 py-1 rounded-md cursor-pointer flex items-center gap-1">
+                  <FaPlus /> New
                   <input
                     type="file"
                     multiple
+                    hidden
                     onChange={handleAddAttachment}
-                    className="hidden"
                     accept=".pdf,.doc,.docx"
                   />
-                  <span className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium">
-                    <FaPlus className="text-xs" />
-                    Add new
-                  </span>
                 </label>
               </div>
 
-              {attachments.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No file has been added</p>
-              ) : (
-                <div className="space-y-3">
-                  {attachments.map((attachment, index) => (
-                    <div
-                      key={attachment.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">
-                          File {index + 1}
-                        </p>
-                        <p className="text-sm text-gray-900 mt-1">{attachment.name}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleViewAttachment(attachment)}
-                          className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium"
-                        >
-                          <FaEye />
-                          View
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAttachment(attachment.id)}
-                          className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium"
-                        >
-                          <FaTrash />
-                          Delete
-                        </button>
-                      </div>
+              <div className="mt-5 flex flex-col gap-4">
+                {attachments.map((att) => (
+                  <div
+                    key={att.id}
+                    className="bg-white p-3 rounded-md border flex justify-between items-center"
+                  >
+                    <span>{att.name}</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handlePreviewAttachment(att)}
+                        className="bg-blue-100 border border-blue-500 px-3 py-1 rounded-md text-sm"
+                      >
+                        Preview
+                      </button>
+                      <button
+                        onClick={() => handleViewAttachment(att)}
+                        className="bg-white border border-gray-400 px-3 py-1 rounded-md text-sm"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAttachment(att.id)}
+                        className="bg-red-100 border border-red-500 text-red-500 px-3 py-1 rounded-md text-sm"
+                      >
+                        Delete
+                      </button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Setting Section */}
-            
-          </div>
-        </div>
-      ) : (
-        /* CV Viewer - Shows formatted CV content */
-        <div className="p-8 overflow-auto">
-          <div className="max-w-6xl mx-auto">
-            {/* Header */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-6 flex items-center justify-between sticky top-0 z-30">
-              <div className="flex items-center gap-3">
-                <FaFileAlt className="text-blue-600 text-2xl" />
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">{viewingFile.name}</h2>
-                  <p className="text-sm text-gray-500">Resume Document</p>
-                </div>
+                  </div>
+                ))}
               </div>
-              <button
-                onClick={handleCloseViewer}
-                className="flex items-center gap-2 px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium"
-              >
+            </div>
+          </div>
+        ) : (
+          <div className="fixed top-0 left-0 w-full h-full bg-black/70 p-8 flex flex-col">
+            <div className="flex justify-between items-center text-white mb-4">
+              <h3>{viewingAttachment.name}</h3>
+              <button onClick={() => setViewingAttachment(null)}>
                 <FaTimes />
-                Close
               </button>
             </div>
-
-            {/* CV Content */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              {renderCVContent()}
-            </div>
+            <iframe
+              src={viewingAttachment.url}
+              className="w-full h-[600px] rounded-md border-0 bg-white"
+              title="Preview"
+            ></iframe>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 };
 
-export default Profile;
+export default ProfileCandidate;
