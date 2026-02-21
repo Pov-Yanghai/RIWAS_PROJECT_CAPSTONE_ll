@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import jobsData  from '../../data/jobsData';
+import jobsData from '../../data/jobsData';
 
 const ApplyJob = () => {
   const { jobId } = useParams();
@@ -8,18 +8,14 @@ const ApplyJob = () => {
   const [selectedCV, setSelectedCV] = useState('');
   const [cvFile, setCvFile] = useState(null);
 
-  // Find the specific job
   const job = jobsData.find((j) => j.id === parseInt(jobId));
 
   if (!job) {
     return (
-      <div className="min-h-screen  justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Job Not Found</h2>
-          <button
-            onClick={() => navigate('/view-jobs')}
-            className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-          >
+          <button onClick={() => navigate('/view-jobs')} className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
             Back to Jobs
           </button>
         </div>
@@ -29,219 +25,162 @@ const ApplyJob = () => {
 
   const handleCVUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setCvFile(file);
-    }
+    if (file) setCvFile(file);
   };
 
   const handleSubmit = () => {
-    // Store application in localStorage or state management
     const application = {
       jobId: job.id,
       jobTitle: job.title,
       appliedDate: new Date().toLocaleDateString('en-GB'),
       status: 'Application',
-      cv: selectedCV || cvFile?.name
+      cv: selectedCV || cvFile?.name,
     };
-
-    // Get existing applications
-    const existingApplications = JSON.parse(localStorage.getItem('applications') || '[]');
-    
-    // Check if already applied
-    const alreadyApplied = existingApplications.some(app => app.jobId === job.id);
-    
-    if (alreadyApplied) {
+    const existing = JSON.parse(localStorage.getItem('applications') || '[]');
+    if (existing.some(app => app.jobId === job.id)) {
       alert('You have already applied for this position!');
       navigate('/application');
       return;
     }
-
-    // Add new application
-    existingApplications.push(application);
-    localStorage.setItem('applications', JSON.stringify(existingApplications));
-
-    // Navigate to application page
+    existing.push(application);
+    localStorage.setItem('applications', JSON.stringify(existing));
     navigate('/application');
   };
 
+  // small reusable field box
+  const InfoBox = ({ label, value }) => (
+    <div>
+      <label className="block text-xs font-medium text-gray-500 mb-1.5">{label}</label>
+      <div className="px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 bg-white">
+        {value || "—"}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl">
-        {/* Header */}
-       
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Title */}
-          <div className="bg-gradient-to-r from-green-500 to-green-600 px-8 py-6">
-            <h2 className="text-2xl font-bold text-white">Apply for {job.title}</h2>
-          </div>
+    <div className="p-8 bg-gray-50 min-h-screen" style={{ fontFamily: "'Roboto', sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+      <div className="max-w-7xl mx-auto">
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
-            {/* Left Side - Job Information */}
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">{job.title}</h3>
-                <p className="text-gray-600 mb-4">
-                  <span className="font-medium">Department:</span> {job.department}
-                </p>
-              </div>
+        {/* PAGE TITLE + green underline */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Apply for {job.title}</h1>
+          <div className="mt-2 h-0.5 w-full bg-green-500 rounded" />
+        </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Job Type</label>
-                  <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">{job.jobType}</div>
-                </div>
+        {/* TWO COLUMN LAYOUT */}
+        <div className="flex gap-6 items-start">
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                  <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">{job.location}</div>
-                </div>
+          {/* LEFT — Job details */}
+          <div className="flex-1 bg-white rounded-xl shadow-sm p-8">
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Salary Range</label>
-                  <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">{job.salaryRange}</div>
-                </div>
+            {/* Job title + department */}
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{job.title}</h2>
+            <p className="text-sm text-gray-600 mb-7">Department: {job.department}</p>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Application Deadline</label>
-                    <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">{job.deadline}</div>
-                  </div>
+            {/* Job Type + Location */}
+            <div className="grid grid-cols-2 gap-5 mb-5">
+              <InfoBox label="Job Type" value={job.jobType} />
+              <InfoBox label="Location" value={job.location} />
+            </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Posted Date</label>
-                    <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-900">{job.postedDate}</div>
-                  </div>
-                </div>
-              </div>
+            {/* Salary Range — full width */}
+            <div className="mb-5">
+              <InfoBox label="Salary Range" value={job.salaryRange} />
+            </div>
 
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Job Description</h4>
-                <div className="px-4 py-3 bg-gray-50 rounded-lg text-gray-700 text-sm">
-                  {job.description}
-                </div>
-              </div>
+            {/* Deadline + Posted Date */}
+            <div className="grid grid-cols-2 gap-5 mb-7">
+              <InfoBox label="Application Deadline" value={job.deadline} />
+              <InfoBox label="Posted Date" value={job.postedDate} />
+            </div>
 
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Requirements</h4>
-                <div className="px-4 py-3 bg-gray-50 rounded-lg">
-                  <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
-                    {job.requirements.map((req, index) => (
-                      <li key={index}>{req}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Responsibilities</h4>
-                <div className="px-4 py-3 bg-gray-50 rounded-lg">
-                  <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
-                    {job.responsibilities.slice(0, 3).map((resp, index) => (
-                      <li key={index}>{resp}</li>
-                    ))}
-                  </ul>
-                </div>
+            {/* Job Description */}
+            <div className="mb-6">
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Job Description</label>
+              <div className="px-4 py-3 border border-gray-200 rounded-lg text-sm text-gray-700 leading-relaxed bg-white min-h-[80px]">
+                {job.description}
               </div>
             </div>
 
-            {/* Right Side - Resume Selection */}
-            <div className="space-y-6">
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Select Your Resume</h3>
-
-                <div className="space-y-4">
-                  {/* Select from existing CV */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Select Your CV</label>
-                    <div className="relative">
-                      <select
-                        value={selectedCV}
-                        onChange={(e) => {
-                          setSelectedCV(e.target.value);
-                          setCvFile(null);
-                        }}
-                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none cursor-pointer text-gray-700"
-                      >
-                        <option value="">Select Your CV</option>
-                        <option value="Eng_Mengeang_Resume.pdf">Eng_Mengeang_Resume.pdf</option>
-                        <option value="John_Doe_CV.pdf">John_Doe_CV.pdf</option>
-                        <option value="Jane_Smith_Resume.pdf">Jane_Smith_Resume.pdf</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => {
-                        setSelectedCV('');
-                        setCvFile(null);
-                      }}
-                      className="flex-1 px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                    >
-                      Back
-                    </button>
-                    <label className="flex-1 cursor-pointer">
-                      <input
-                        type="file"
-                        onChange={handleCVUpload}
-                        className="hidden"
-                        accept=".pdf,.doc,.docx"
-                      />
-                      <div className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-center font-medium">
-                        {cvFile ? cvFile.name.substring(0, 15) + '...' : 'Apply'}
-                      </div>
-                    </label>
-                  </div>
-
-                  {/* File Upload Info */}
-                  {cvFile && (
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <p className="text-sm text-green-800 font-medium">File Selected:</p>
-                      <p className="text-sm text-green-700 mt-1">{cvFile.name}</p>
-                    </div>
-                  )}
-
-                  {/* Submit Button */}
-                  {(selectedCV || cvFile) && (
-                    <button
-                      onClick={handleSubmit}
-                      className="w-full px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all font-bold text-lg shadow-lg"
-                    >
-                      Submit Application
-                    </button>
-                  )}
-                </div>
+            {/* Requirements */}
+            <div className="mb-6">
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Requirements</label>
+              <div className="px-4 py-3 border border-gray-200 rounded-lg bg-white">
+                <ul className="space-y-1.5">
+                  {job.requirements?.map((req, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                      <span className="text-gray-400 mt-0.5">•</span>{req}
+                    </li>
+                  ))}
+                </ul>
               </div>
+            </div>
 
-              {/* Additional Info Card */}
-              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6">
-                <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <span className="text-xl">💡</span>
-                  Application Tips
-                </h4>
-                <ul className="space-y-2 text-sm text-gray-700">
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-500 mt-1">✓</span>
-                    <span>Ensure your CV is up to date</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-500 mt-1">✓</span>
-                    <span>Highlight relevant skills and experience</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-500 mt-1">✓</span>
-                    <span>Double-check all information before submitting</span>
-                  </li>
+            {/* Responsibilities */}
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Responsibilities</label>
+              <div className="px-4 py-3 border border-gray-200 rounded-lg bg-white">
+                <ul className="space-y-1.5">
+                  {job.responsibilities?.map((resp, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                      <span className="text-gray-400 mt-0.5">•</span>{resp}
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
           </div>
+
+          {/* RIGHT — Select Resume */}
+          <div className="w-80 shrink-0 bg-white rounded-xl shadow-sm p-8">
+            <h3 className="text-lg font-bold text-gray-900 mb-6 text-center">Select Your Resume</h3>
+
+            {/* CV dropdown */}
+            <div className="mb-6">
+              <div className="relative">
+                <select
+                  value={selectedCV}
+                  onChange={(e) => { setSelectedCV(e.target.value); setCvFile(null); }}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 bg-gray-50 appearance-none outline-none cursor-pointer"
+                >
+                  <option value="">Select Your CV</option>
+                  <option value="Eng_Mengeang_Resume.pdf">Eng_Mengeang_Resume.pdf</option>
+                  <option value="John_Doe_CV.pdf">John_Doe_CV.pdf</option>
+                  <option value="Jane_Smith_Resume.pdf">Jane_Smith_Resume.pdf</option>
+                </select>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">▼</span>
+              </div>
+            </div>
+
+            {/* Back + Apply buttons */}
+            <div className="flex gap-3 mb-5">
+              <button
+                onClick={() => navigate('/view-jobs')}
+                className="flex-1 py-2.5 text-sm font-semibold bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors"
+              >
+                Back
+              </button>
+              <button
+                onClick={handleSubmit}
+                className="flex-1 py-2.5 text-sm font-semibold bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors"
+              >
+                Apply
+              </button>
+            </div>
+
+            {/* Upload file option */}
+            <label className="block cursor-pointer">
+              <input type="file" onChange={handleCVUpload} className="hidden" accept=".pdf,.doc,.docx" />
+              {cvFile && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700 mt-2">
+                  <p className="font-semibold">File Selected:</p>
+                  <p className="mt-0.5">{cvFile.name}</p>
+                </div>
+              )}
+            </label>
+          </div>
+
         </div>
       </div>
     </div>

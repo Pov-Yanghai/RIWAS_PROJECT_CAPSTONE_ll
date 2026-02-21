@@ -47,104 +47,60 @@ const UploadCV = () => {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      background: "#fff",
-      fontFamily: "'Inter', 'Segoe UI', sans-serif",
-    }}>
+    <div className="min-h-screen flex flex-col bg-white font-sans">
 
-  
-      <div style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "20px 0 18px",
-        borderBottom: "2px solid #22c55e",
-      }}>
-        <img src="./biglogo.png" alt="RIWAS Logo" style={{ height: 90, objectFit: "contain" }} />
+      {/* Header with logo */}
+      <div className="flex justify-center items-center py-5 border-b-2 border-green-500">
+        <img src="./biglogo.png" alt="RIWAS Logo" className="h-20 object-contain" />
       </div>
 
-    
-      <div style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        paddingTop: 60,
-        paddingBottom: 40,
-        paddingLeft: 16,
-        paddingRight: 16,
-      }}>
+      {/* Main content */}
+      <div className="flex-1 flex flex-col items-center pt-16 pb-10 px-4">
 
         {/* Title */}
-        <h1 style={{
-          fontSize: 28,
-          fontWeight: 700,
-          color: "#111827",
-          marginBottom: 40,
-        }}>
+        <h1 className="text-3xl font-bold text-gray-900 mb-10">
           Input Your Resume
         </h1>
 
-        <div style={{ width: "100%", maxWidth: 420, marginBottom: 12 }}>
+        {/* Drop zone */}
+        <div className="w-full max-w-md mb-3">
           <div
             onClick={() => fileInputRef.current.click()}
             onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
             onDrop={handleDrop}
-            style={{
-              width: "100%",
-              boxSizing: "border-box",
-              border: `2px dashed ${dragging ? "#22c55e" : selectedFile ? "#22c55e" : "#d1d5db"}`,
-              borderRadius: 12,
-              background: dragging ? "#f0fdf4" : selectedFile ? "#f0fdf4" : "#fafafa",
-              padding: "36px 24px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 10,
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }}
+            className={`
+              w-full border-2 border-dashed rounded-xl p-10 flex flex-col items-center gap-2.5 cursor-pointer transition-all duration-200
+              ${dragging || selectedFile
+                ? "border-green-500 bg-green-50"
+                : "border-gray-300 bg-gray-50 hover:border-green-400 hover:bg-green-50"
+              }
+            `}
           >
-            {/* Upload icon */}
-            <div style={{
-              width: 52, height: 52,
-              borderRadius: "50%",
-              background: selectedFile ? "#dcfce7" : "#f3f4f6",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              marginBottom: 4,
-            }}>
+            {/* Icon circle */}
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-1 ${selectedFile ? "bg-green-100" : "bg-gray-100"}`}>
               {selectedFile ? (
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                  <path d="M20 6L9 17l-5-5" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M20 6L9 17l-5-5" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               ) : (
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               )}
             </div>
 
             {selectedFile ? (
               <>
-                <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#16a34a" }}>
-                  {selectedFile.name}
-                </p>
-                <p style={{ margin: 0, fontSize: 12, color: "#6b7280" }}>
+                <p className="m-0 text-base font-semibold text-green-700">{selectedFile.name}</p>
+                <p className="m-0 text-xs text-gray-500">
                   {(selectedFile.size / 1024).toFixed(1)} KB · Click to change file
                 </p>
               </>
             ) : (
               <>
-                <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#374151" }}>
-                  Click to upload or drag & drop
-                </p>
-                <p style={{ margin: 0, fontSize: 12, color: "#9ca3af" }}>
-                  PDF only · Max 5MB
-                </p>
+                <p className="m-0 text-base font-semibold text-gray-700">Click to upload or drag & drop</p>
+                <p className="m-0 text-xs text-gray-400">PDF only · Max 5MB</p>
               </>
             )}
 
@@ -153,51 +109,28 @@ const UploadCV = () => {
               type="file"
               accept=".pdf"
               onChange={handleFileChange}
-              style={{ display: "none" }}
+              className="hidden"
             />
           </div>
         </div>
 
         {/* Buttons */}
-        <div style={{
-          display: "flex",
-          gap: 24,
-          marginTop: 28,
-          width: "100%",
-          maxWidth: 420,
-          justifyContent: "center",
-        }}>
+        <div className="flex gap-6 mt-7 w-full max-w-md">
           <button
             onClick={() => navigate("/login")}
-            style={{
-              flex: 1,
-              padding: "13px 0",
-              background: "#22c55e",
-              color: "#fff",
-              border: "none",
-              borderRadius: 8,
-              fontSize: 15,
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
+            className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold text-base rounded-lg transition-colors cursor-pointer"
           >
             Back
           </button>
           <button
             onClick={handleContinue}
             disabled={uploading || !selectedFile}
-            style={{
-              flex: 1,
-              padding: "13px 0",
-              background: "#22c55e",
-              color: "#fff",
-              border: "none",
-              borderRadius: 8,
-              fontSize: 15,
-              fontWeight: 600,
-              cursor: uploading || !selectedFile ? "not-allowed" : "pointer",
-              opacity: uploading || !selectedFile ? 0.6 : 1,
-            }}
+            className={`flex-1 py-3 text-white font-semibold text-base rounded-lg transition-colors
+              ${uploading || !selectedFile
+                ? "bg-green-300 cursor-not-allowed opacity-60"
+                : "bg-green-500 hover:bg-green-600 cursor-pointer"
+              }
+            `}
           >
             {uploading ? "Uploading..." : "Continue"}
           </button>

@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getMyResume, updateResume } from "../../server/userResumeAPI";
 
-// Load Roboto font
-const fontLink = document.createElement("link");
-fontLink.rel = "stylesheet";
-fontLink.href = "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap";
-document.head.appendChild(fontLink);
-
 
 const toArray = (v) => (Array.isArray(v) ? v : v && typeof v === "string" && v.trim() ? [v] : []);
 
@@ -53,84 +47,77 @@ const transformAIToForm = (p) => {
 };
 
 
-const color = {
-  green:       "#22c55e",
-  greenLight:  "#f0fdf4",
-  greenBorder: "#bbf7d0",
-  border:      "#e5e7eb",
-  bg:          "#f3f4f6",
-  white:       "#fff",
-  label:       "#6b7280",
-  text:        "#111827",
-  subtext:     "#374151",
-  placeholder: "#9ca3af",
-  red:         "#ef4444",
-  redLight:    "#fef2f2",
-};
-
 
 const Lbl = ({ children }) => (
-  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: color.label, marginBottom: 5, fontFamily: "inherit" }}>
-    {children}
-  </label>
+  <label className="block text-xs font-medium text-gray-500 mb-1">{children}</label>
 );
 
-const Field = ({ label, value, editing, onChange, textarea, rows = 3, fullWidth }) => {
-  const base = {
-    width: "100%", padding: "9px 13px", fontSize: 14, fontFamily: "inherit",
-    color: color.text, borderRadius: 8, outline: "none", boxSizing: "border-box",
-  };
-  const readStyle = { ...base, background: color.white, border: `1.5px solid ${color.border}`, color: value ? color.text : color.placeholder, cursor: "default" };
-  const editStyle = { ...base, background: color.white, border: `1.5px solid ${color.green}` };
-
-  return (
-    <div style={fullWidth ? { gridColumn: "1 / -1" } : {}}>
-      {label && <Lbl>{label}</Lbl>}
-      {textarea ? (
-        editing
-          ? <textarea value={value} onChange={e => onChange(e.target.value)} rows={rows} style={{ ...editStyle, resize: "vertical", lineHeight: 1.6 }} />
-          : <div style={{ ...readStyle, lineHeight: 1.7, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{value || <span style={{ color: color.placeholder }}>—</span>}</div>
+const Field = ({ label, value, editing, onChange, textarea, rows = 3, fullWidth }) => (
+  <div className={fullWidth ? "col-span-2" : ""}>
+    {label && <Lbl>{label}</Lbl>}
+    {textarea ? (
+      editing ? (
+        <textarea
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          rows={rows}
+          className="w-full px-3 py-2 text-sm border border-green-400 rounded-lg outline-none resize-y leading-relaxed font-[Roboto,sans-serif]"
+        />
       ) : (
-        <input type="text" disabled={!editing} value={value} onChange={e => onChange(e.target.value)} style={editing ? editStyle : readStyle} />
-      )}
-    </div>
-  );
-};
-
-const Card = ({ title, children }) => (
-  <div style={{ background: color.white, borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)", marginBottom: 20, overflow: "hidden" }}>
-    <div style={{ padding: "15px 24px", borderBottom: `1px solid ${color.border}` }}>
-      <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: color.green }}>{title}</h2>
-    </div>
-    <div style={{ padding: "22px 24px" }}>{children}</div>
+        <div className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white text-gray-800 leading-relaxed whitespace-pre-wrap break-words min-h-[42px]">
+          {value || <span className="text-gray-400">—</span>}
+        </div>
+      )
+    ) : (
+      <input
+        type="text"
+        disabled={!editing}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className={`w-full px-3 py-2 text-sm rounded-lg outline-none border font-[Roboto,sans-serif]
+          ${editing
+            ? "border-green-400 bg-white text-gray-900"
+            : "border-gray-200 bg-white text-gray-800 cursor-default"
+          }`}
+      />
+    )}
   </div>
 );
 
-const Grid2 = ({ children, gap = "16px 28px" }) => (
-  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap }}>{children}</div>
+// Section card with header
+const Card = ({ title, children }) => (
+  <div className="bg-white rounded-xl shadow-sm mb-5 overflow-hidden">
+    <div className="px-6 py-4 border-b border-gray-100">
+      <h2 className="text-sm font-bold text-green-500">{title}</h2>
+    </div>
+    <div className="px-6 py-5">{children}</div>
+  </div>
 );
 
-const HR = () => <div style={{ borderTop: `1px dashed ${color.border}`, margin: "20px 0" }} />;
-const Empty = ({ text }) => <p style={{ color: color.placeholder, fontStyle: "italic", fontSize: 13, margin: 0 }}>{text}</p>;
-
-// Small icon buttons
-const AddBtn = ({ onClick }) => (
-  <button onClick={onClick} style={{
-    display: "flex", alignItems: "center", gap: 6,
-    padding: "7px 14px", borderRadius: 7, border: `1.5px solid ${color.green}`,
-    background: color.greenLight, color: color.green, fontWeight: 600, fontSize: 13,
-    cursor: "pointer", fontFamily: "inherit", marginTop: 14,
-  }}>
-    <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> Add
-  </button>
+// Section with add button in header
+const SectionWithAdd = ({ title, btnLabel, onAdd, children }) => (
+  <div className="bg-white rounded-xl shadow-sm mb-5 overflow-hidden">
+    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h2 className="text-sm font-bold text-green-500">{title}</h2>
+      <button
+        onClick={onAdd}
+        className="px-4 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors"
+      >
+        {btnLabel}
+      </button>
+    </div>
+    <div className="px-6 py-5">{children}</div>
+  </div>
 );
+
+const HR = () => <div className="border-t border-dashed border-gray-200 my-5" />;
+const Empty = ({ text }) => <p className="text-gray-400 italic text-xs m-0">{text}</p>;
 
 const RemoveBtn = ({ onClick }) => (
-  <button onClick={onClick} style={{
-    padding: "4px 10px", borderRadius: 6, border: `1px solid ${color.red}`,
-    background: color.redLight, color: color.red, fontWeight: 600, fontSize: 12,
-    cursor: "pointer", fontFamily: "inherit", flexShrink: 0,
-  }}>
+  <button
+    onClick={onClick}
+    className="px-2.5 py-1 text-xs font-semibold text-red-500 border border-red-300 bg-red-50 hover:bg-red-100 rounded-md transition-colors shrink-0"
+  >
     Remove
   </button>
 );
@@ -165,14 +152,11 @@ const CVPage = () => {
     })();
   }, []);
 
-  const setPI    = (k, v) => setFormData(p => ({ ...p, personalInformation: { ...p.personalInformation, [k]: v } }));
-  const setSkill = (k, v) => setFormData(p => ({ ...p, skills: { ...p.skills, [k]: v } }));
-  const setArr   = (sec, i, k, v) => setFormData(p => {
-    const a = [...p[sec]]; a[i] = { ...a[i], [k]: v };
-    return { ...p, [sec]: a };
-  });
-  const addItem  = (sec, blank) => setFormData(p => ({ ...p, [sec]: [...p[sec], blank] }));
-  const removeItem = (sec, i)   => setFormData(p => ({ ...p, [sec]: p[sec].filter((_, idx) => idx !== i) }));
+  const setPI      = (k, v) => setFormData(p => ({ ...p, personalInformation: { ...p.personalInformation, [k]: v } }));
+  const setSkill   = (k, v) => setFormData(p => ({ ...p, skills: { ...p.skills, [k]: v } }));
+  const setArr     = (sec, i, k, v) => setFormData(p => { const a = [...p[sec]]; a[i] = { ...a[i], [k]: v }; return { ...p, [sec]: a }; });
+  const addItem    = (sec, blank) => setFormData(p => ({ ...p, [sec]: [...p[sec], blank] }));
+  const removeItem = (sec, i)     => setFormData(p => ({ ...p, [sec]: p[sec].filter((_, idx) => idx !== i) }));
 
   const handleSave = async () => {
     if (!resumeId) return;
@@ -203,44 +187,61 @@ const CVPage = () => {
   };
 
   if (loading) return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "60vh" }}>
-      <p style={{ color: color.placeholder, fontSize: 15, fontFamily: "'Roboto', sans-serif" }}>Loading resume…</p>
+    <div className="flex items-center justify-center h-[60vh]">
+      <p className="text-gray-400 text-sm">Loading resume…</p>
     </div>
   );
 
   const pi = formData.personalInformation;
-  const btnGreen = { padding: "9px 22px", borderRadius: 8, border: "none", background: color.green, color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", fontFamily: "inherit" };
-  const btnGhost = { padding: "9px 22px", borderRadius: 8, border: `1.5px solid ${color.border}`, background: color.white, color: color.subtext, fontWeight: 600, fontSize: 14, cursor: "pointer", fontFamily: "inherit" };
 
   return (
-    <div style={{ padding: "28px 32px", background: color.bg, minHeight: "100vh", fontFamily: "'Roboto', sans-serif" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+    <div className="p-8 bg-gray-100 min-h-screen" style={{ fontFamily: "'Roboto', sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+      <div className="max-w-[1200px] mx-auto">
 
         {/* PAGE HEADER */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: color.text }}>My Resume / CV</h1>
-          <div style={{ display: "flex", gap: 10 }}>
-            {isEditing ? (
-              <>
-                <button onClick={() => setIsEditing(false)} style={btnGhost}>Cancel</button>
-                <button onClick={handleSave} style={btnGreen}>Save Changes</button>
-              </>
-            ) : (
-              <button onClick={() => setIsEditing(true)} style={btnGreen}>Edit Resume</button>
-            )}
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-gray-900">My Resume / CV</h1>
+            <div className="flex gap-2.5">
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-5 py-2 text-sm font-semibold text-gray-600 border border-gray-300 bg-white rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    className="px-5 py-2 text-sm font-semibold text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors"
+                  >
+                    Save Changes
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="px-5 py-2 text-sm font-semibold text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors"
+                >
+                  Edit Resume
+                </button>
+              )}
+            </div>
           </div>
+          <div className="mt-2 h-0.5 w-full bg-green-500 rounded" />
         </div>
 
         {/* PERSONAL INFORMATION */}
         <Card title="Personal Information">
-          <Grid2>
+          <div className="grid grid-cols-2 gap-x-7 gap-y-4">
             <Field label="Full name"     value={pi.fullName}    editing={isEditing} onChange={v => setPI("fullName", v)} />
             <Field label="Professional"  value={pi.title}       editing={isEditing} onChange={v => setPI("title", v)} />
             <Field label="Email"         value={pi.email}       editing={isEditing} onChange={v => setPI("email", v)} />
             <Field label="Phone Number"  value={pi.phone}       editing={isEditing} onChange={v => setPI("phone", v)} />
             <Field label="Date of Birth" value={pi.dateOfBirth} editing={isEditing} onChange={v => setPI("dateOfBirth", v)} />
             <Field label="Address"       value={pi.address}     editing={isEditing} onChange={v => setPI("address", v)} />
-          </Grid2>
+          </div>
         </Card>
 
         {/* PROFESSIONAL SUMMARY */}
@@ -250,221 +251,157 @@ const CVPage = () => {
         </Card>
 
         {/* EDUCATION */}
-        <div style={{ background: color.white, borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)", marginBottom: 20, overflow: "hidden" }}>
-          <div style={{ padding: "15px 24px", borderBottom: `1px solid ${color.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: color.green }}>Education</h2>
-            <button onClick={() => addItem("education", { degree: "", school: "", year: "" })}
-              style={{ padding: "7px 16px", borderRadius: 7, border: "none", background: color.green, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
-              + Add Education
-            </button>
-          </div>
-          <div style={{ padding: "18px 24px" }}>
-            {formData.education.length === 0 && <Empty text="No education added yet." />}
-            {formData.education.map((e, i) => (
-              <div key={i}>
-                {i > 0 && <HR />}
-                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-                  <RemoveBtn onClick={() => removeItem("education", i)} />
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 160px", gap: "0 20px", marginBottom: 14 }}>
-                  <Field label="Degree" value={e.degree} editing={isEditing} onChange={v => setArr("education", i, "degree", v)} />
-                  <Field label="Year"   value={e.year}   editing={isEditing} onChange={v => setArr("education", i, "year", v)} />
-                </div>
-                <Field label="School / Institution" value={e.school} editing={isEditing} onChange={v => setArr("education", i, "school", v)} />
+        <SectionWithAdd title="Education" btnLabel="+ Add Education" onAdd={() => addItem("education", { degree: "", school: "", year: "" })}>
+          {formData.education.length === 0 && <Empty text="No education added yet." />}
+          {formData.education.map((e, i) => (
+            <div key={i}>
+              {i > 0 && <HR />}
+              <div className="flex justify-end mb-2">
+                <RemoveBtn onClick={() => removeItem("education", i)} />
               </div>
-            ))}
+              <div className="grid gap-x-5 mb-3" style={{ gridTemplateColumns: "1fr 160px" }}>
+                <Field label="Degree" value={e.degree} editing={isEditing} onChange={v => setArr("education", i, "degree", v)} />
+                <Field label="Year"   value={e.year}   editing={isEditing} onChange={v => setArr("education", i, "year", v)} />
+              </div>
+              <Field label="School / Institution" value={e.school} editing={isEditing} onChange={v => setArr("education", i, "school", v)} />
+            </div>
+          ))}
 
-            {/* Achievements nested inside Education */}
-            {formData.achievements.length > 0 && (
-              <div style={{ marginTop: 20 }}>
-                <Lbl>Achievements</Lbl>
-                <div style={{ background: color.greenLight, border: `1px solid ${color.greenBorder}`, borderRadius: 10, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-                  {formData.achievements.map((a, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ color: color.green, fontSize: 18, fontWeight: 900, flexShrink: 0 }}>•</span>
-                      <input
-                        type="text" disabled={!isEditing} value={a.name}
-                        onChange={e => setArr("achievements", i, "name", e.target.value)}
-                        style={{ flex: 1, padding: "8px 12px", fontSize: 14, border: `1.5px solid ${isEditing ? color.green : color.greenBorder}`, borderRadius: 7, outline: "none", fontFamily: "inherit", background: color.white, color: color.text }}
-                      />
-                    </div>
-                  ))}
-                </div>
+          {/* Achievements nested in Education */}
+          {formData.achievements.length > 0 && (
+            <div className="mt-5">
+              <Lbl>Achievements</Lbl>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex flex-col gap-2.5">
+                {formData.achievements.map((a, i) => (
+                  <div key={i} className="flex items-center gap-2.5">
+                    <span className="text-green-500 font-black text-lg shrink-0">•</span>
+                    <input
+                      type="text" disabled={!isEditing} value={a.name}
+                      onChange={e => setArr("achievements", i, "name", e.target.value)}
+                      className={`flex-1 px-3 py-2 text-sm rounded-lg outline-none border
+                        ${isEditing ? "border-green-400 bg-white" : "border-green-200 bg-white"} text-gray-900`}
+                    />
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+        </SectionWithAdd>
 
         {/* EXPERIENCE */}
-        <div style={{ background: color.white, borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)", marginBottom: 20, overflow: "hidden" }}>
-          <div style={{ padding: "15px 24px", borderBottom: `1px solid ${color.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: color.green }}>Experience</h2>
-            <button onClick={() => addItem("experience", { position: "", company: "", startDate: "", endDate: "", description: "" })}
-              style={{ padding: "7px 16px", borderRadius: 7, border: "none", background: color.green, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
-              + Add Experience
-            </button>
-          </div>
-          <div style={{ padding: "18px 24px" }}>
-            {formData.experience.length === 0 && <Empty text="No experience added yet." />}
-            {formData.experience.map((e, i) => (
-              <div key={i}>
-                {i > 0 && <HR />}
-                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-                  <RemoveBtn onClick={() => removeItem("experience", i)} />
-                </div>
-                <Grid2>
-                  <Field label="Position"    value={e.position}    editing={isEditing} onChange={v => setArr("experience", i, "position", v)} />
-                  <Field label="Company"     value={e.company}     editing={isEditing} onChange={v => setArr("experience", i, "company", v)} />
-                  <Field label="Start Date"  value={e.startDate}   editing={isEditing} onChange={v => setArr("experience", i, "startDate", v)} />
-                  <Field label="End Date"    value={e.endDate}     editing={isEditing} onChange={v => setArr("experience", i, "endDate", v)} />
-                  <Field label="Description" value={e.description} editing={isEditing} textarea rows={3} onChange={v => setArr("experience", i, "description", v)} fullWidth />
-                </Grid2>
+        <SectionWithAdd title="Experience" btnLabel="+ Add Experience" onAdd={() => addItem("experience", { position: "", company: "", startDate: "", endDate: "", description: "" })}>
+          {formData.experience.length === 0 && <Empty text="No experience added yet." />}
+          {formData.experience.map((e, i) => (
+            <div key={i}>
+              {i > 0 && <HR />}
+              <div className="flex justify-end mb-2">
+                <RemoveBtn onClick={() => removeItem("experience", i)} />
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="grid grid-cols-2 gap-x-7 gap-y-4">
+                <Field label="Position"   value={e.position}    editing={isEditing} onChange={v => setArr("experience", i, "position", v)} />
+                <Field label="Company"    value={e.company}     editing={isEditing} onChange={v => setArr("experience", i, "company", v)} />
+                <Field label="Start Date" value={e.startDate}   editing={isEditing} onChange={v => setArr("experience", i, "startDate", v)} />
+                <Field label="End Date"   value={e.endDate}     editing={isEditing} onChange={v => setArr("experience", i, "endDate", v)} />
+                <Field label="Description" value={e.description} editing={isEditing} textarea rows={3} onChange={v => setArr("experience", i, "description", v)} fullWidth />
+              </div>
+            </div>
+          ))}
+        </SectionWithAdd>
 
         {/* PROJECTS */}
-        <div style={{ background: color.white, borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)", marginBottom: 20, overflow: "hidden" }}>
-          <div style={{ padding: "15px 24px", borderBottom: `1px solid ${color.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: color.green }}>Projects</h2>
-            <button onClick={() => addItem("projects", { name: "", description: "" })}
-              style={{ padding: "7px 16px", borderRadius: 7, border: "none", background: color.green, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
-              + Add Project
-            </button>
-          </div>
-          <div style={{ padding: "18px 24px" }}>
-            {formData.projects.length === 0 && <Empty text="No projects added yet." />}
-            {formData.projects.map((p, i) => (
-              <div key={i}>
-                {i > 0 && <HR />}
-                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-                  <RemoveBtn onClick={() => removeItem("projects", i)} />
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  <Field label="Project Name" value={p.name}        editing={isEditing} onChange={v => setArr("projects", i, "name", v)} />
-                  <Field label="Description"  value={p.description} editing={isEditing} textarea rows={2} onChange={v => setArr("projects", i, "description", v)} />
-                </div>
+        <SectionWithAdd title="Projects" btnLabel="+ Add Project" onAdd={() => addItem("projects", { name: "", description: "" })}>
+          {formData.projects.length === 0 && <Empty text="No projects added yet." />}
+          {formData.projects.map((p, i) => (
+            <div key={i}>
+              {i > 0 && <HR />}
+              <div className="flex justify-end mb-2">
+                <RemoveBtn onClick={() => removeItem("projects", i)} />
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="flex flex-col gap-3.5">
+                <Field label="Project Name" value={p.name}        editing={isEditing} onChange={v => setArr("projects", i, "name", v)} />
+                <Field label="Description"  value={p.description} editing={isEditing} textarea rows={2} onChange={v => setArr("projects", i, "description", v)} />
+              </div>
+            </div>
+          ))}
+        </SectionWithAdd>
 
         {/* SKILLS */}
         <Card title="Skills">
-          <Grid2>
+          <div className="grid grid-cols-2 gap-x-7 gap-y-4">
             <Field label="Programming" value={formData.skills.programming} editing={isEditing} onChange={v => setSkill("programming", v)} />
             <Field label="Frameworks"  value={formData.skills.frameworks}  editing={isEditing} onChange={v => setSkill("frameworks", v)} />
             <Field label="Tools"       value={formData.skills.tools}       editing={isEditing} onChange={v => setSkill("tools", v)} />
             <Field label="Soft Skills" value={formData.skills.softSkills}  editing={isEditing} onChange={v => setSkill("softSkills", v)} />
-          </Grid2>
+          </div>
         </Card>
 
         {/* CERTIFICATIONS */}
-        <div style={{ background: color.white, borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)", marginBottom: 20, overflow: "hidden" }}>
-          {/* Header row: green title left, add button right */}
-          <div style={{ padding: "15px 24px", borderBottom: `1px solid ${color.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: color.green, textTransform: "uppercase", letterSpacing: "0.05em" }}>Certifications</h2>
-            <button
-              onClick={() => addItem("certifications", { name: "" })}
-              style={{ padding: "7px 16px", borderRadius: 7, border: "none", background: color.green, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
-              + Add CERTIFICATIONS
-            </button>
-          </div>
-          <div style={{ padding: "18px 24px", display: "flex", flexDirection: "column", gap: 10 }}>
-            {formData.certifications.length === 0 && (
-              <Empty text="No certifications added yet." />
-            )}
+        <SectionWithAdd title="CERTIFICATIONS" btnLabel="+ Add CERTIFICATIONS" onAdd={() => addItem("certifications", { name: "" })}>
+          {formData.certifications.length === 0 && <Empty text="No certifications added yet." />}
+          <div className="flex flex-col gap-2.5">
             {formData.certifications.map((c, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div key={i} className="flex items-center gap-2.5">
                 <input
                   type="text" disabled={!isEditing} value={c.name}
                   onChange={e => setArr("certifications", i, "name", e.target.value)}
-                  style={{
-                    flex: 1, padding: "9px 13px", fontSize: 14, fontFamily: "inherit",
-                    border: `1.5px solid ${color.border}`,
-                    borderRadius: 8, outline: "none", background: isEditing ? color.white : "#f9fafb", color: color.text,
-                  }}
+                  className={`flex-1 px-3 py-2 text-sm rounded-lg outline-none border
+                    ${isEditing ? "bg-white border-green-400" : "bg-gray-50 border-gray-200"} text-gray-900`}
                 />
                 <RemoveBtn onClick={() => removeItem("certifications", i)} />
               </div>
             ))}
           </div>
-        </div>
+        </SectionWithAdd>
 
         {/* EXTRACURRICULAR */}
-        <div style={{ background: color.white, borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)", marginBottom: 20, overflow: "hidden" }}>
-          {/* Header row: green title left, add button right */}
-          <div style={{ padding: "15px 24px", borderBottom: `1px solid ${color.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: color.green, textTransform: "capitalize", letterSpacing: "0.01em" }}>Extracurricular Activities</h2>
-            <button
-              onClick={() => addItem("extracurricular", { role: "", organization: "", year: "", description: "" })}
-              style={{ padding: "7px 16px", borderRadius: 7, border: "none", background: color.green, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
-              + Add Activity
-            </button>
-          </div>
-          <div style={{ padding: "18px 24px" }}>
-            {formData.extracurricular.length === 0 && (
-              <Empty text="No extracurricular activities yet." />
-            )}
-            {formData.extracurricular.map((e, i) => (
-              <div key={i}>
-                {i > 0 && <HR />}
-                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-                  <RemoveBtn onClick={() => removeItem("extracurricular", i)} />
-                </div>
-                <Grid2>
-                  <Field label="Role"         value={e.role}         editing={isEditing} onChange={v => setArr("extracurricular", i, "role", v)} />
-                  <Field label="Organization" value={e.organization} editing={isEditing} onChange={v => setArr("extracurricular", i, "organization", v)} />
-                  <Field label="Year"         value={e.year}         editing={isEditing} onChange={v => setArr("extracurricular", i, "year", v)} />
-                  <div />
-                  <Field label="Description" value={e.description} editing={isEditing} textarea rows={2} onChange={v => setArr("extracurricular", i, "description", v)} fullWidth />
-                </Grid2>
+        <SectionWithAdd title="Extracurricular Activities" btnLabel="+ Add Activity" onAdd={() => addItem("extracurricular", { role: "", organization: "", year: "", description: "" })}>
+          {formData.extracurricular.length === 0 && <Empty text="No extracurricular activities yet." />}
+          {formData.extracurricular.map((e, i) => (
+            <div key={i}>
+              {i > 0 && <HR />}
+              <div className="flex justify-end mb-2">
+                <RemoveBtn onClick={() => removeItem("extracurricular", i)} />
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="grid grid-cols-2 gap-x-7 gap-y-4">
+                <Field label="Role"         value={e.role}         editing={isEditing} onChange={v => setArr("extracurricular", i, "role", v)} />
+                <Field label="Organization" value={e.organization} editing={isEditing} onChange={v => setArr("extracurricular", i, "organization", v)} />
+                <Field label="Year"         value={e.year}         editing={isEditing} onChange={v => setArr("extracurricular", i, "year", v)} />
+                <div />
+                <Field label="Description" value={e.description} editing={isEditing} textarea rows={2} onChange={v => setArr("extracurricular", i, "description", v)} fullWidth />
+              </div>
+            </div>
+          ))}
+        </SectionWithAdd>
 
         {/* LANGUAGES */}
-        <div style={{ background: color.white, borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.07)", marginBottom: 20, overflow: "hidden" }}>
-          <div style={{ padding: "15px 24px", borderBottom: `1px solid ${color.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: color.green, textTransform: "capitalize" }}>Languages</h2>
-            <button
-              onClick={() => addItem("languages", { name: "", level: "" })}
-              style={{ padding: "7px 16px", borderRadius: 7, border: "none", background: color.green, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
-              + Add Language
-            </button>
-          </div>
-          <div style={{ padding: "18px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
-            {formData.languages.length === 0 && (
-              <Empty text="No languages added yet." />
-            )}
+        <SectionWithAdd title="Languages" btnLabel="+ Add Language" onAdd={() => addItem("languages", { name: "", level: "" })}>
+          {formData.languages.length === 0 && <Empty text="No languages added yet." />}
+          <div className="flex flex-col gap-4">
             {formData.languages.map((l, i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 28px", alignItems: "end" }}>
-                {/* Language input */}
+              <div key={i} className="grid grid-cols-2 gap-x-7 items-end">
+                {/* Language */}
                 <div>
                   <Lbl>Language</Lbl>
                   <input
                     type="text" disabled={!isEditing} value={l.name}
                     onChange={e => setArr("languages", i, "name", e.target.value)}
-                    style={{ width: "100%", padding: "9px 13px", fontSize: 14, fontFamily: "inherit", border: `1.5px solid ${color.border}`, borderRadius: 8, outline: "none", background: "#f9fafb", color: color.text, boxSizing: "border-box" }}
+                    className={`w-full px-3 py-2 text-sm rounded-lg outline-none border
+                      ${isEditing ? "bg-white border-green-400" : "bg-gray-50 border-gray-200"} text-gray-900`}
                   />
                 </div>
-                {/* Level dropdown */}
-                <div style={{ display: "flex", alignItems: "end", gap: 10 }}>
-                  <div style={{ flex: 1 }}>
+                {/* Level + Remove */}
+                <div className="flex items-end gap-2.5">
+                  <div className="flex-1">
                     <Lbl>Level</Lbl>
-                    <div style={{ position: "relative" }}>
+                    <div className="relative">
                       <select
                         disabled={!isEditing}
                         value={l.level}
                         onChange={e => setArr("languages", i, "level", e.target.value)}
-                        style={{
-                          width: "100%", padding: "9px 36px 9px 13px", fontSize: 14, fontFamily: "inherit",
-                          border: `1.5px solid ${color.border}`, borderRadius: 8, outline: "none",
-                          background: "#f9fafb", color: l.level ? color.text : color.placeholder,
-                          appearance: "none", cursor: isEditing ? "pointer" : "default",
-                        }}>
+                        className={`w-full px-3 py-2 pr-8 text-sm rounded-lg outline-none border appearance-none
+                          ${isEditing ? "bg-white border-green-400 cursor-pointer" : "bg-gray-50 border-gray-200 cursor-default"}
+                          ${l.level ? "text-gray-900" : "text-gray-400"}`}
+                      >
                         <option value="">Select level</option>
                         <option value="Native">Native</option>
                         <option value="Fluent">Fluent</option>
@@ -472,7 +409,7 @@ const CVPage = () => {
                         <option value="Intermediate">Intermediate</option>
                         <option value="Beginner">Beginner</option>
                       </select>
-                      <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: color.label, fontSize: 12 }}>▼</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none">▼</span>
                     </div>
                   </div>
                   <RemoveBtn onClick={() => removeItem("languages", i)} />
@@ -480,7 +417,7 @@ const CVPage = () => {
               </div>
             ))}
           </div>
-        </div>
+        </SectionWithAdd>
 
       </div>
     </div>

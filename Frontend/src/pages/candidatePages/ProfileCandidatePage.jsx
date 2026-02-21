@@ -4,7 +4,7 @@ import { FaCamera, FaPlus, FaTimes } from "react-icons/fa";
 const ProfileCandidate = () => {
   const fileInputRef = useRef(null);
   const [profileImage, setProfileImage] = useState(
-    "https://via.placeholder.com/150"
+    "./userprofile.png"
   );
 
   const [isEditing, setIsEditing] = useState(false);
