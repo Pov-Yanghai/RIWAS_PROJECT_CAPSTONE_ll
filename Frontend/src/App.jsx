@@ -59,7 +59,7 @@ function App() {
         <Route path="/apply-job/:jobId" element={<Layout><ApplyJob /></Layout>} />
         <Route path="/application" element={<Layout><ApplicationPage /></Layout>} />
         <Route path="/notifications" element={<Layout><Notifications /></Layout>} />
-      
+        <Route path="/cvNoSidebar" element={<CVPage />} />
         
         {/* Core Dashboard Routes */}
         <Route path="/dashboard" element={<Dashboard />} />
