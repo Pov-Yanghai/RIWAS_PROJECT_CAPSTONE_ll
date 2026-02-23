@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SideBar from "../components/SideBar";
+import SideBar from "../../components/SideBar";
 
 const stepTypes = [
   { name: "Application", color: "bg-blue-500" },

@@ -1,17 +1,17 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import SignUp from "./pages/Signup";
-import Login from "./pages/Login";
-import ProfilePage from "./pages/ProfilePage";
-import Dashboard from "./pages/Dashboard";
-import JobList from "./pages/JobPosting";
-import ManageApplication from "./pages/ManageApplication";
-import CandidateInfo from "./pages/CandidateInfo";
-import RecruitmentWorkflow from "./pages/RecruitmentWorkflow";
-import PostJob from "./pages/PostJob";
-import MatrixPage from "./pages/MatrixPage";
-import EditProfile from "./pages/EditPage";
-import JobDetailView from "./pages/JobDetailView";
-import InputResume from "./pages/InputResume";
+import SignUp from "./pages/hrPages/Signup";
+import Login from "./pages/hrPages/Login";
+import ProfilePage from "./pages/hrPages/ProfilePage";
+import Dashboard from "./pages/hrPages/Dashboard";
+import JobList from "./pages/hrPages/JobPosting";
+import ManageApplication from "./pages/hrPages/ManageApplication";
+import CandidateInfo from "./pages/hrPages/CandidateInfo";
+import RecruitmentWorkflow from "./pages/hrPages/RecruitmentWorkflow";
+import PostJob from "./pages/hrPages/PostJob";
+import MatrixPage from "./pages/hrPages/MatrixPage";
+import EditProfile from "./pages/hrPages/EditPage";
+import JobDetailView from "./pages/hrPages/JobDetailView";
+import InputResume from "./pages/hrPages/InputResume";
 
 // Sana Candidate Pages import 
 import Layout from "./components/Layout";

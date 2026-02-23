@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import SideBar from "../components/SideBar";
+import SideBar from "../../components/SideBar";
 
 export default function ProfilePage() {
   const [id, setId] = useState("");

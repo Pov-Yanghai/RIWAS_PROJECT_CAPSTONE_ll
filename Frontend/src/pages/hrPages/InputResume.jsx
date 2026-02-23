@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import biglogo from '../assets/images/biglogo.png'
+import biglogo from '../../assets/images/biglogo.png'
 import { Upload, FileText, CheckCircle } from 'lucide-react'
 
 const InputResume = () => {

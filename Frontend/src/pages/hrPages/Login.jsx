@@ -4,7 +4,7 @@ import { IoIosArrowBack } from "react-icons/io";
 import { HiMail } from "react-icons/hi";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { FcGoogle } from "react-icons/fc";
-import { signIn } from "../server/authAPI";
+import { signIn } from "../../server/authAPI";
 
 const Login = () => {
   const navigate = useNavigate();

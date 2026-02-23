@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import SideBar from "../components/SideBar";
+import SideBar from "../../components/SideBar";
 
 export default function ManageApplication() {
   const [filter, setFilter] = useState("All");

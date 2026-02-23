@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { IoIosArrowBack } from "react-icons/io";
 import { MdEmail, MdLock, MdPerson } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
-import { signUp } from "../server/authAPI";
+import { signUp } from "../../server/authAPI";
 
 const SignUp = () => {
   const navigate = useNavigate();

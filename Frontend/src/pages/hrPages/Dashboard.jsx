@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import SideBar from "../components/SideBar";
+import SideBar from "../../components/SideBar";
 import { FaArrowUp, FaUsers, FaBriefcase, FaUserCheck, FaClock, FaCheckCircle, FaChevronDown } from "react-icons/fa";
 import { HiOutlineDocumentText } from "react-icons/hi";
 
