@@ -114,6 +114,7 @@ export const sendApplicationReceivedEmail = async ({
   applicant,
   positionTitle,
   companyName,
+  hrName = "Human Resources Department",
 }) => {
   const html = `
     <p>Dear ${applicant.fullName},</p>
@@ -138,7 +139,8 @@ export const sendApplicationReceivedEmail = async ({
 
     <p>
       Kind regards,<br/>
-      <strong>Human Resources Department</strong><br/>
+      <strong>${hrName}</strong><br/>
+      Human Resources Department<br/>
       ${companyName}
     </p>
   `

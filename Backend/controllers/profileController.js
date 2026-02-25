@@ -28,6 +28,7 @@ export const createProfile = asyncHandler(async (req, res) => {
     github: req.body.github || null,
     linkedin: req.body.linkedin || null,
     twitter: req.body.twitter || null,
+    phonenumber: req.body.phonenumber || null,
   });
 
   // Create candidate info (if role is candidate)
@@ -108,6 +109,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
     "github",
     "linkedin",
     "twitter",
+    "phonenumber",
   ];
 
   const profileUpdates = Object.fromEntries(

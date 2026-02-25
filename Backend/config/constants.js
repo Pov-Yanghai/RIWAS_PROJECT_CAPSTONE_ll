@@ -48,6 +48,7 @@ export const NOTIFICATION_TYPES = {
   JOB_PUBLISHED: "job_published",
   JOB_CLOSED: "job_closed",
   NEW_MESSAGE: "new_message",
+  APPLICATION_RECEIVED: "application_received",
 }
 
 export const INTERVIEW_STATUS = {

@@ -165,12 +165,12 @@ export const submitApplication = asyncHandler(async (req, res) => {
     await createNotification({
       senderId: req.user.id,
       recipient: req.user,
-      type: NOTIFICATION_TYPES.APPLICATION_STATUS_CHANGED,
+      type: NOTIFICATION_TYPES.APPLICATION_RECEIVED,
       content: `Your application for "${job.title}" has been received.`,
       application,
     });
   } catch (err) {
-    console.warn("Failed to send application status notification:", err.message);
+    console.warn("Failed to send application received notification:", err.message);
   }
 
   res.status(201).json({ message: "Application submitted successfully", data: application });
