@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { getMyResume, updateResume } from "../../server/userResumeAPI";
 
-
 const toArray = (v) => (Array.isArray(v) ? v : v && typeof v === "string" && v.trim() ? [v] : []);
 
 const parseAIAnalysis = (ai_analysis) => {
   if (!ai_analysis) return null;
   let c = ai_analysis;
-  if (typeof c === "object" && typeof c.raw === "string") c = c.raw;
+
+  // Unwrap double-nested { ai_analysis: { ... } } updated
+  if (typeof c === "object" && c !== null && c.ai_analysis && !c.personalInformation) {
+    c = c.ai_analysis;
+  }
+
   if (typeof c === "string") {
     try {
       c = JSON.parse(
@@ -15,6 +19,16 @@ const parseAIAnalysis = (ai_analysis) => {
       );
     } catch { return null; }
   }
+
+  if (typeof c === "object" && c !== null && !c.personalInformation && typeof c.raw === "string") {
+    try {
+      const fromRaw = JSON.parse(
+        c.raw.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim()
+      );
+      if (typeof fromRaw === "object" && fromRaw !== null) c = fromRaw;
+    } catch { /* keep c as is */ }
+  }
+
   return typeof c === "object" && c !== null ? c : null;
 };
 
@@ -45,8 +59,6 @@ const transformAIToForm = (p) => {
     achievements:    toArray(p.achievements).map(a    => typeof a === "string" ? { name: a } : { name: a?.name || "" }),
   };
 };
-
-
 
 const Lbl = ({ children }) => (
   <label className="block text-xs font-medium text-gray-500 mb-1">{children}</label>
@@ -84,7 +96,6 @@ const Field = ({ label, value, editing, onChange, textarea, rows = 3, fullWidth 
   </div>
 );
 
-// Section card with header
 const Card = ({ title, children }) => (
   <div className="bg-white rounded-xl shadow-sm mb-5 overflow-hidden">
     <div className="px-6 py-4 border-b border-gray-100">
@@ -94,7 +105,6 @@ const Card = ({ title, children }) => (
   </div>
 );
 
-// Section with add button in header
 const SectionWithAdd = ({ title, btnLabel, onAdd, children }) => (
   <div className="bg-white rounded-xl shadow-sm mb-5 overflow-hidden">
     <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -122,7 +132,6 @@ const RemoveBtn = ({ onClick }) => (
   </button>
 );
 
-
 const CVPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [resumeId,  setResumeId]  = useState(null);
@@ -136,21 +145,22 @@ const CVPage = () => {
     certifications: [], extracurricular: [], languages: [], achievements: [],
   });
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const res  = await getMyResume();
-        const body = res?.data;
-        const data = body?.data ?? body;
-        if (!data) return;
-        setResumeId(data.id);
-        const mapped = transformAIToForm(parseAIAnalysis(data.ai_analysis));
-        if (mapped) setFormData(mapped);
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
-    })();
-  }, []);
+  const fetchResume = async () => {
+    setLoading(true);
+    try {
+      const res     = await getMyResume();
+      const body    = res?.data;
+      const rawData = body?.data ?? body;
+      const data    = Array.isArray(rawData) ? rawData[0] : rawData;
+      if (!data) return;
+      setResumeId(data.id);
+      const mapped = transformAIToForm(parseAIAnalysis(data.ai_analysis));
+      if (mapped) setFormData(mapped);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchResume(); }, []);
 
   const setPI      = (k, v) => setFormData(p => ({ ...p, personalInformation: { ...p.personalInformation, [k]: v } }));
   const setSkill   = (k, v) => setFormData(p => ({ ...p, skills: { ...p.skills, [k]: v } }));
@@ -182,6 +192,7 @@ const CVPage = () => {
         },
       });
       setIsEditing(false);
+      await fetchResume();
       alert("Resume updated successfully!");
     } catch { alert("Failed to save."); }
   };
@@ -199,7 +210,6 @@ const CVPage = () => {
       <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
       <div className="max-w-[1200px] mx-auto">
 
-        {/* PAGE HEADER */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-gray-900">My Resume / CV</h1>
@@ -232,7 +242,6 @@ const CVPage = () => {
           <div className="mt-2 h-0.5 w-full bg-green-500 rounded" />
         </div>
 
-        {/* PERSONAL INFORMATION */}
         <Card title="Personal Information">
           <div className="grid grid-cols-2 gap-x-7 gap-y-4">
             <Field label="Full name"     value={pi.fullName}    editing={isEditing} onChange={v => setPI("fullName", v)} />
@@ -244,13 +253,11 @@ const CVPage = () => {
           </div>
         </Card>
 
-        {/* PROFESSIONAL SUMMARY */}
         <Card title="Professional Summary">
           <Field value={formData.summary} editing={isEditing} textarea rows={4}
             onChange={v => setFormData(p => ({ ...p, summary: v }))} />
         </Card>
 
-        {/* EDUCATION */}
         <SectionWithAdd title="Education" btnLabel="+ Add Education" onAdd={() => addItem("education", { degree: "", school: "", year: "" })}>
           {formData.education.length === 0 && <Empty text="No education added yet." />}
           {formData.education.map((e, i) => (
@@ -266,8 +273,6 @@ const CVPage = () => {
               <Field label="School / Institution" value={e.school} editing={isEditing} onChange={v => setArr("education", i, "school", v)} />
             </div>
           ))}
-
-          {/* Achievements nested in Education */}
           {formData.achievements.length > 0 && (
             <div className="mt-5">
               <Lbl>Achievements</Lbl>
@@ -288,7 +293,6 @@ const CVPage = () => {
           )}
         </SectionWithAdd>
 
-        {/* EXPERIENCE */}
         <SectionWithAdd title="Experience" btnLabel="+ Add Experience" onAdd={() => addItem("experience", { position: "", company: "", startDate: "", endDate: "", description: "" })}>
           {formData.experience.length === 0 && <Empty text="No experience added yet." />}
           {formData.experience.map((e, i) => (
@@ -308,7 +312,6 @@ const CVPage = () => {
           ))}
         </SectionWithAdd>
 
-        {/* PROJECTS */}
         <SectionWithAdd title="Projects" btnLabel="+ Add Project" onAdd={() => addItem("projects", { name: "", description: "" })}>
           {formData.projects.length === 0 && <Empty text="No projects added yet." />}
           {formData.projects.map((p, i) => (
@@ -325,7 +328,6 @@ const CVPage = () => {
           ))}
         </SectionWithAdd>
 
-        {/* SKILLS */}
         <Card title="Skills">
           <div className="grid grid-cols-2 gap-x-7 gap-y-4">
             <Field label="Programming" value={formData.skills.programming} editing={isEditing} onChange={v => setSkill("programming", v)} />
@@ -335,7 +337,6 @@ const CVPage = () => {
           </div>
         </Card>
 
-        {/* CERTIFICATIONS */}
         <SectionWithAdd title="CERTIFICATIONS" btnLabel="+ Add CERTIFICATIONS" onAdd={() => addItem("certifications", { name: "" })}>
           {formData.certifications.length === 0 && <Empty text="No certifications added yet." />}
           <div className="flex flex-col gap-2.5">
@@ -353,7 +354,6 @@ const CVPage = () => {
           </div>
         </SectionWithAdd>
 
-        {/* EXTRACURRICULAR */}
         <SectionWithAdd title="Extracurricular Activities" btnLabel="+ Add Activity" onAdd={() => addItem("extracurricular", { role: "", organization: "", year: "", description: "" })}>
           {formData.extracurricular.length === 0 && <Empty text="No extracurricular activities yet." />}
           {formData.extracurricular.map((e, i) => (
@@ -373,13 +373,11 @@ const CVPage = () => {
           ))}
         </SectionWithAdd>
 
-        {/* LANGUAGES */}
         <SectionWithAdd title="Languages" btnLabel="+ Add Language" onAdd={() => addItem("languages", { name: "", level: "" })}>
           {formData.languages.length === 0 && <Empty text="No languages added yet." />}
           <div className="flex flex-col gap-4">
             {formData.languages.map((l, i) => (
               <div key={i} className="grid grid-cols-2 gap-x-7 items-end">
-                {/* Language */}
                 <div>
                   <Lbl>Language</Lbl>
                   <input
@@ -389,7 +387,6 @@ const CVPage = () => {
                       ${isEditing ? "bg-white border-green-400" : "bg-gray-50 border-gray-200"} text-gray-900`}
                   />
                 </div>
-                {/* Level + Remove */}
                 <div className="flex items-end gap-2.5">
                   <div className="flex-1">
                     <Lbl>Level</Lbl>
