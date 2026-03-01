@@ -209,15 +209,23 @@ Return only valid JSON.`;
     return res.status(200).json({ message: "Resume updated with new file and AI analysis", data: resume });
   }
 
-  // Option 2: Manual AI JSON update without new file
+  // Option 2: Manual AI JSON update without new file 
   if (ai_analysis) {
-    await resume.update({
-      ai_analysis,
-      updatedAt: new Date(),
-    });
-
-    return res.status(200).json({ message: "AI analysis updated manually", data: resume });
+  let parsedAnalysis = ai_analysis;
+  if (typeof ai_analysis === "string") {
+    try { parsedAnalysis = JSON.parse(ai_analysis); }
+    catch { return res.status(400).json({ error: "Invalid ai_analysis JSON" }); }
   }
+
+  //unwrap if frontend accidentally sent { ai_analysis: { ... } } make sure after update data can be fetch backk by frontend
+  if (parsedAnalysis.ai_analysis && !parsedAnalysis.personalInformation) {
+    parsedAnalysis = parsedAnalysis.ai_analysis;
+  }
+
+  await resume.update({ ai_analysis: parsedAnalysis, updatedAt: new Date() });
+  await resume.reload();
+  return res.status(200).json({ message: "AI analysis updated manually", data: resume });
+}
 
   // If neither file nor AI JSON provided
   res.status(400).json({ error: "Please provide a resume file or AI analysis JSON to update" });
