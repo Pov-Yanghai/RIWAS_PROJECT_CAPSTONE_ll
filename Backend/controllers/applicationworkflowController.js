@@ -1,8 +1,10 @@
 import { ApplicationWorkflow } from "../models/ApplicationWorkflow.js";
 import { JobApplication } from "../models/JobApplication.js";
 import { Recruiter } from "../models/Recruiter.js";
+import { Candidate } from "../models/Candidate.js";
+import { Profile } from "../models/Profile.js";
 import { asyncHandler } from "../middlewares/errorHandler.js";
-import { WORKFLOW_STEP } from "../config/constants.js";
+import { WORKFLOW_STEP, USER_ROLES } from "../config/constants.js";
 
 
 // Add workflow step to an application
@@ -69,6 +71,21 @@ export const addWorkflowStep = asyncHandler(async (req, res) => {
 export const getWorkflowByApplication = asyncHandler(async (req, res) => {
   const { applicationId } = req.params;
 
+  const application = await JobApplication.findByPk(applicationId);
+  if (!application) return res.status(404).json({ error: "Application not found" });
+
+  // Candidates can only read workflows for their own applications
+  if (req.user.role === USER_ROLES.CANDIDATE) {
+    const candidateProfile = await Profile.findOne({
+      where: { user_id: req.user.id, role: USER_ROLES.CANDIDATE },
+      include: [{ model: Candidate, as: "candidateInfo" }],
+    });
+    const candidateId = candidateProfile?.candidateInfo?.id;
+    if (!candidateId || application.candidate_id !== candidateId) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+  }
+
   const workflows = await ApplicationWorkflow.findAll({
     where: { application_id: applicationId },
     order: [["created_at", "ASC"]],
@@ -76,5 +93,24 @@ export const getWorkflowByApplication = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     data: workflows,
+  });
+});
+
+// Updated Delete function on 2/3/2026
+// Delete workflow step 
+
+export const deleteWorkflowStep = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const workflow = await ApplicationWorkflow.findByPk(id);
+
+  if (!workflow) {
+    return res.status(404).json({ error: "Workflow step not found" });
+  }
+
+  await workflow.destroy();
+
+  res.status(200).json({
+    message: "Workflow step deleted successfully",
   });
 });
