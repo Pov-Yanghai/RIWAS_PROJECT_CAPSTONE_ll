@@ -1,9 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import jobsData from '../../data/jobsData';
+import { getJobs } from '../../server/jobsAPI';
 
 const ViewJobs = () => {
   const navigate = useNavigate();
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const res = await getJobs({ page: 1, limit: 20 });
+        setJobs(res.data || []);
+      } catch (err) {
+        console.error(err);
+        setError(err.response?.data?.error || 'Failed to load jobs');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen" style={{ fontFamily: "'Roboto', sans-serif" }}>
@@ -16,9 +37,20 @@ const ViewJobs = () => {
           <div className="mt-2 h-0.5 w-full bg-green-500 rounded" />
         </div>
 
+        {/* State: loading / error / empty */}
+        {loading && (
+          <p className="text-gray-500 text-sm">Loading jobs...</p>
+        )}
+        {!loading && error && (
+          <p className="text-red-500 text-sm">{error}</p>
+        )}
+        {!loading && !error && jobs.length === 0 && (
+          <p className="text-gray-500 text-sm">No jobs available.</p>
+        )}
+
         {/* Jobs grid — 4 columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {jobsData.map((job) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-4">
+          {jobs.map((job) => (
             <div
               key={job.id}
               className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-200 overflow-hidden"
@@ -33,7 +65,7 @@ const ViewJobs = () => {
                 />
                 {/* Frosted label at bottom like the image */}
                 <div className="absolute bottom-0 left-0 right-0 px-3 py-1.5 bg-white/60 backdrop-blur-sm text-xs text-gray-500 font-medium">
-                  {job.department || "User interface design"}
+                  {job.department || job.location || "User interface design"}
                 </div>
               </div>
 
@@ -43,10 +75,10 @@ const ViewJobs = () => {
                   {job.title}
                 </h3>
                 <p className="text-sm text-gray-600 mb-0.5">
-                  Applicants: {job.applicants ?? 50}
+                  Applicants: {job.applicants ?? '—'}
                 </p>
                 <p className="text-sm text-gray-600 mb-4">
-                  Posted date: {job.postedDate}
+                  Posted date: {new Date(job.createdAt || job.postedDate).toLocaleDateString()}
                 </p>
 
                 {/* Buttons */}
