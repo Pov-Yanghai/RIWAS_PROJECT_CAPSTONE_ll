@@ -1,34 +1,113 @@
 import React, { useState, useEffect } from 'react';
+import { getMyApplications } from '../../server/jobapplicationAPI';
 
-const sampleNotifications = [
-  {
-    id: 1,
-    title: "We've receive your application",
-    role: 'Backend Developer',
-    company: 'CADT',
-    time: '1 min',
-    read: false,
+// sendApplicationStatusEmail subjects in emailService.js
+const STATUS_NOTIFICATION = {
+  applied: {
+    title: 'Application Received',
+    body:  (job) => `Thank you for applying for ${job}. We have received your application.`,
   },
-  {
-    id: 2,
-    title: 'Interview scheduled',
-    role: 'Frontend Developer',
-    company: 'RIWAS',
-    time: '2 days',
-    read: true,
+  review: {
+    title: 'Application Under Review',
+    body:  (job) => `Your application for ${job} is currently under review.`,
   },
-];
+  interview: {
+    title: 'Interview Scheduled',
+    body:  (job) => `Good news! You have been shortlisted for an interview for ${job}.`,
+  },
+  assessment: {
+    title: 'Assessment Stage',
+    body:  (job) => `Your application for ${job} has moved to the assessment stage.`,
+  },
+  offer: {
+    title: 'Job Offer Extended',
+    body:  (job) => `Congratulations! A job offer has been extended for ${job}.`,
+  },
+  hired: {
+    title: "You've Been Hired!",
+    body:  (job) => `Congratulations! You have been hired for ${job}.`,
+  },
+  rejected: {
+    title: 'Application Decision',
+    body:  (job) => `Your application for ${job} has been reviewed. Unfortunately it was not successful.`,
+  },
+};
+
+const timeAgo = (dateStr) => {
+  if (!dateStr) return '';
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60)           return `${diff}s ago`;
+  if (diff < 3600)         return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400)        return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 86400 * 30)   return `${Math.floor(diff / 86400)}d ago`;
+  return new Date(dateStr).toLocaleDateString();
+};
+
+// Sync application statuses → localStorage notifications, returns merged list
+const buildNotifications = (applications) => {
+  const seen    = JSON.parse(localStorage.getItem('seenAppStatuses') || '{}');
+  const existing = JSON.parse(localStorage.getItem('notifications') || '[]');
+  let updated = [...existing];
+  let changed = false;
+
+  applications.forEach((app) => {
+    const jobTitle = app.job?.title || 'Untitled Job';
+    const status   = app.status?.toLowerCase();
+    if (!status) return;
+
+    const info = STATUS_NOTIFICATION[status];
+    if (!info) return;
+
+    const notifId = `${app.id}-${status}`;
+    if (updated.find(n => n.id === notifId)) return; // already exists
+
+    updated = [{
+      id:      notifId,
+      title:   info.title,
+      body:    info.body(jobTitle),
+      role:    jobTitle,
+      company: app.job?.company?.name || 'RIWAS',
+      createdAt: app.updatedAt || app.applied_at || new Date().toISOString(),
+      read:    false,
+    }, ...updated];
+
+    seen[app.id] = status;
+    changed = true;
+  });
+
+  if (changed) {
+    localStorage.setItem('notifications', JSON.stringify(updated));
+    localStorage.setItem('seenAppStatuses', JSON.stringify(seen));
+  }
+
+  return updated;
+};
 
 const Notifications = () => {
   const [tab, setTab] = useState('new');
   const [notifications, setNotifications] = useState([]);
   const [menuOpen, setMenuOpen] = useState(null);
+  const [, setTick] = useState(0); // drives live time re-render
+
+  // Re-compute relative times every 30 seconds
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem('notifications') || 'null');
-    const data = stored && Array.isArray(stored) && stored.length > 0 ? stored : sampleNotifications;
-    setNotifications(data);
-    localStorage.setItem('notifications', JSON.stringify(data));
+    const load = async () => {
+      try {
+        const res  = await getMyApplications({ limit: 50 });
+        const apps = res.data || [];
+        setNotifications(buildNotifications(apps));
+      } catch {
+        // fallback to whatever is already in localStorage
+        const stored = JSON.parse(localStorage.getItem('notifications') || '[]');
+        setNotifications(stored);
+      }
+    };
+    load();
   }, []);
 
   const saveNotifications = (updated) => {
@@ -108,6 +187,7 @@ const Notifications = () => {
 
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{n.title}</p>
+                    {n.body && <p className="text-xs text-gray-600 mt-0.5">{n.body}</p>}
                     <p className="text-xs text-gray-500 mt-0.5">{n.role}</p>
                     <p className="text-xs text-gray-400">{n.company}</p>
                   </div>
@@ -115,7 +195,7 @@ const Notifications = () => {
 
                 {/* Right: time + 3-dot menu */}
                 <div className="flex flex-col items-end gap-1 shrink-0 ml-4 relative">
-                  <span className="text-xs text-gray-400">{n.time}</span>
+                  <span className="text-xs text-gray-400">{timeAgo(n.createdAt) || n.time || ''}</span>
                   <button
                     onClick={() => setMenuOpen(menuOpen === n.id ? null : n.id)}
                     className="text-gray-400 hover:text-gray-600 text-lg tracking-widest leading-none px-1"

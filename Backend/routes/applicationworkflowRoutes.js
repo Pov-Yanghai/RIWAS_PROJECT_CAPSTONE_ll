@@ -2,6 +2,7 @@ import express from "express";
 import {
   addWorkflowStep,
   getWorkflowByApplication,
+  deleteWorkflowStep,
 } from "../controllers/applicationworkflowController.js";
 
 import { authenticate, authorize } from "../middlewares/auth.js";
@@ -19,9 +20,16 @@ router.post(
 router.get(
   "/:applicationId",
   authenticate,
-  authorize(USER_ROLES.RECRUITER),
   getWorkflowByApplication
 );
-// need delete workflow one more 
+
+// Updated delete workflow Routes
+
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(USER_ROLES.RECRUITER),
+  deleteWorkflowStep
+);
 
 export default router;

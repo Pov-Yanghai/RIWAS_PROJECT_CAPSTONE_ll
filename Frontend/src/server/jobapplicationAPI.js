@@ -1,12 +1,12 @@
-import axios from 'axios';
+import axios from "axios";
 
 const API = axios.create({
-    baseURL: "http://localhost:5000/api",
+  baseURL: "http://localhost:5000/api",
 });
 
-
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
+  const token =
+    localStorage.getItem("token") || localStorage.getItem("accessToken");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -14,7 +14,11 @@ API.interceptors.request.use((config) => {
 // -----------------------------
 // SUBMIT APPLICATION
 // -----------------------------
-export const submitApplication = async (jobId, resumeFile, coverLetterFile = null) => {
+export const submitApplication = async (
+  jobId,
+  resumeFile,
+  coverLetterFile = null,
+) => {
   const formData = new FormData();
   formData.append("jobId", jobId);
   formData.append("resume", resumeFile);
@@ -27,9 +31,32 @@ export const submitApplication = async (jobId, resumeFile, coverLetterFile = nul
 };
 
 // -----------------------------
+// SUBMIT APPLICATION WITH EXISTING RESUME ID
+// -----------------------------
+export const submitApplicationWithResumeId = async (
+  jobId,
+  resumeId,
+  coverLetterFile = null,
+) => {
+  const formData = new FormData();
+  formData.append("jobId", jobId);
+  formData.append("resumeId", resumeId);
+  if (coverLetterFile) formData.append("coverLetter", coverLetterFile);
+
+  const res = await API.post("/jobapplications/submit", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+};
+
+// -----------------------------
 // GET MY APPLICATIONS (candidate)
 // -----------------------------
-export const getMyApplications = async ({ page = 1, limit = 10, status = "" } = {}) => {
+export const getMyApplications = async ({
+  page = 1,
+  limit = 10,
+  status = "",
+} = {}) => {
   const params = { page, limit };
   if (status) params.status = status;
 
@@ -48,8 +75,15 @@ export const getApplicationById = async (id) => {
 // -----------------------------
 // UPDATE APPLICATION STATUS (recruiter)
 // -----------------------------
-export const updateApplicationStatus = async (id, { status, rejection_reason = null, notes = null }) => {
-  const res = await API.put(`/jobapplications/${id}`, { status, rejection_reason, notes });
+export const updateApplicationStatus = async (
+  id,
+  { status, rejection_reason = null, notes = null },
+) => {
+  const res = await API.put(`/jobapplications/${id}`, {
+    status,
+    rejection_reason,
+    notes,
+  });
   return res.data;
 };
 
