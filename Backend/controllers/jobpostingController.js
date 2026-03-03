@@ -54,8 +54,8 @@ export const createJob = asyncHandler(async (req, res) => {
 
    if (job.status === JOB_STATUS.PUBLISHED) {
     await createNotification({
-      senderId: req.user.profile.id,
-      recipientId: req.user.profile.id,
+      senderId: req.user.user.id,
+      recipientId: req.user.user.id,
       type: NOTIFICATION_TYPES.JOB_PUBLISHED,
       content: `Your job "${job.title}" has been published.`,
     });
@@ -174,8 +174,8 @@ export const updateJob = asyncHandler(async (req, res) => {
     data.publishedAt = new Date();
 
     await createNotification({
-      senderId: req.user.profile.id,
-      recipientId: req.user.profile.id,
+      senderId: req.user.id,
+      recipientId: req.user.id,
       type: NOTIFICATION_TYPES.JOB_PUBLISHED,
       content: `Your job "${job.title}" has been published.`,
     });
@@ -183,8 +183,8 @@ export const updateJob = asyncHandler(async (req, res) => {
 
   if (data.status === JOB_STATUS.CLOSED) {
     await createNotification({
-      senderId: req.user.profile.id,
-      recipientId: req.user.profile.id,
+      senderId: req.user.id,
+      recipientId: req.user.id,
       type: NOTIFICATION_TYPES.JOB_CLOSED,
       content: `Your job "${job.title}" has been closed.`,
     });

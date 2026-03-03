@@ -24,9 +24,9 @@ const Login = () => {
       localStorage.setItem("refreshToken", refreshToken);
 
       alert(`Welcome back, ${user.firstName}!`);
-      user.role === "RECRUITER" ? navigate("/jobpost") : navigate("/viewjob");
+      user.role === "RECRUITER" ? navigate("/profile-page") : navigate("/profile");
     } catch (err) {
-      alert(err.response?.data?.error || "❌ Login failed");
+      alert(err.response?.data?.error || "Login failed");
     }
   };
 
