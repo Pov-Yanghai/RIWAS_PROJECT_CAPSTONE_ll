@@ -232,7 +232,7 @@ const syncNotificationsFromApplications = (applications) => {
       title:   info.title,
       body:    info.body(jobTitle),
       role:    jobTitle,
-      company: app.job?.company?.name || '',
+      company: app.job?.company?.name || 'RIWAS',
       time:    'Just now',
       read:    false,
     };

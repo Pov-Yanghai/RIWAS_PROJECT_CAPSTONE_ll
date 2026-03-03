@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getMyApplications } from '../../server/jobapplicationAPI';
 
-// Mirrors sendApplicationStatusEmail subjects in emailService.js
+// sendApplicationStatusEmail subjects in emailService.js
 const STATUS_NOTIFICATION = {
   applied: {
     title: 'Application Received',
@@ -66,7 +66,7 @@ const buildNotifications = (applications) => {
       title:   info.title,
       body:    info.body(jobTitle),
       role:    jobTitle,
-      company: app.job?.company?.name || '',
+      company: app.job?.company?.name || 'RIWAS',
       createdAt: app.updatedAt || app.applied_at || new Date().toISOString(),
       read:    false,
     }, ...updated];
