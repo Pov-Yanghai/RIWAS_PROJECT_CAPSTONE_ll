@@ -6,8 +6,8 @@ class requ(Base):
 
     job_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     title = Column(String(50), index=True)
-    description = Column(Text, index=True)
     company_name = Column(String(50), index=True)
+    description = Column(Text, index=True)
     tags_skill = Column(Text, index=True)
     
 class user_profile(Base):
