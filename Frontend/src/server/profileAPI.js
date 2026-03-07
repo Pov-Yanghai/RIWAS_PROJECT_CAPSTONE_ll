@@ -88,3 +88,31 @@ export const incrementProfileViews = async (userId) => {
   const res = await API.post(`/profiles/${userId}/view`);
   return res.data;
 };
+
+
+// Updated fro doing dashbaord
+// ── Users ─────────────────────────────────────────────────────────────────────
+
+
+export const getAllUsers = (params = {}) =>
+  API.get("/users", { params });
+
+// GET /api/users/:id
+export const getUserById = (id) =>
+  API.get(`/users/${id}`);
+
+
+export const updateUserProfile = (profileData) => {
+  const form = new FormData();
+  Object.entries(profileData).forEach(([k, v]) => {
+    if (k === "image" && v) { form.append("image", v); return; }
+    if (v !== undefined && v !== null) form.append(k, v);
+  });
+  return API.put("/users/profile", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+
+export const deleteUser = (id) =>
+  API.delete(`/users/${id}`);
