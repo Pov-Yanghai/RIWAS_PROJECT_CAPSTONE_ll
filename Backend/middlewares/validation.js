@@ -55,6 +55,10 @@ export const createJobSchema = Joi.object({
     max: Joi.number().optional(),
     currency: Joi.string().optional(),
   }).optional(),
+
+  status: Joi.string().valid("draft", "published", "closed").optional(),
+
+  applicationDeadline: Joi.date().iso().optional(),
 })
 
 export const updateJobSchema = Joi.object({

@@ -3,6 +3,7 @@ import { sequelize } from "../config/database.js";
 
 import { User } from "../models/User.js";
 import { Candidate } from "../models/Candidate.js";
+import { Profile } from "../models/Profile.js";
 import { JobPosting } from "../models/JobPosting.js";
 import { JobApplication } from "../models/JobApplication.js";
 import { APPLICATION_STATUS, JOB_STATUS } from "../config/constants.js";
@@ -26,7 +27,7 @@ export const getDashboardData = async (req, res) => {
     const { startDate, endDate } = buildDateRange(month, year);
 
     // ================= SUMMARY =================
-    const [totalCandidates, openPositions, hiresThisMonth, avgTimeToHire] =
+    const [totalCandidates, openPositions, hiresThisMonth, avgTimeToHire, totalApplicantsToday] =
       await Promise.all([
         // Total candidates
         Candidate.count(),
@@ -59,6 +60,16 @@ export const getDashboardData = async (req, res) => {
             `"status" = '${APPLICATION_STATUS.HIRED}' AND "updatedAt" >= '${startDate.toISOString()}' AND "updatedAt" < '${endDate.toISOString()}'`
           ),
           raw: true,
+        }),
+
+        // Total applicants today
+        JobApplication.count({
+          where: {
+            applied_at: { 
+              [Op.gte]: new Date(new Date().setHours(0, 0, 0, 0)),
+              [Op.lt]: new Date(new Date().setHours(23, 59, 59, 999))
+            },
+          },
         }),
       ]);
 
@@ -99,16 +110,27 @@ export const getDashboardData = async (req, res) => {
 
     // ================= RECENT APPLICATIONS =================
     const recentApplications = await JobApplication.findAll({
-      limit: 5,
+      limit: 10,
       order: [["createdAt", "DESC"]],
-      attributes: ["id", "status", "applied_at"],
+      attributes: ["id", "status", "applied_at", "updatedAt"],
       include: [
         {
           model: Candidate,
           as: "candidate",
           attributes: ["id"],
           include: [
-            { model: User, as: "user", attributes: ["firstName", "lastName"] },
+            { 
+              model: User, 
+              as: "user", 
+              attributes: ["firstName", "lastName"],
+              include: [
+                {
+                  model: Profile,
+                  as: "profile",
+                  attributes: ["avatarUrl", "headline"]
+                }
+              ]
+            },
           ],
         },
         { model: JobPosting, as: "job", attributes: ["title"] },
@@ -144,6 +166,7 @@ export const getDashboardData = async (req, res) => {
         totalCandidates,
         openPositions,
         hiresThisMonth,
+        totalApplicantsToday,
         avgTimeToHire: avgTimeToHire?.avg_days
           ? Math.round(avgTimeToHire.avg_days)
           : 0,
@@ -161,6 +184,13 @@ export const getDashboardData = async (req, res) => {
         position: app.job?.title,
         status: app.status,
         appliedDate: app.applied_at,
+        updatedAt: app.updatedAt,
+        candidate: {
+          profile: {
+            avatarUrl: app.candidate?.user?.profile?.avatarUrl || null,
+            headline: app.candidate?.user?.profile?.headline || null
+          }
+        }
       })),
 
       jobOpenings,
