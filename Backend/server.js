@@ -29,6 +29,8 @@ import scoretemplateRoutes from "./routes/scoretemplateRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 // Resume routes 
 import userresumeRoutes from "./routes/userresumeRoutes.js"; 
+// Notification routes
+import notificationRoutes from "./routes/notificationRoutes.js"; 
 
 // Middleware imports
 import { errorHandler } from "./middlewares/errorHandler.js";
@@ -99,6 +101,8 @@ app.use("/api/templates", scoretemplateRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 // user resume routes
 app.use("/api/resumes", userresumeRoutes);
+// Notification routes
+app.use("/api/notifications", notificationRoutes);
 // --------------------
 // 404 Handler
 // --------------------

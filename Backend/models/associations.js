@@ -106,6 +106,12 @@ export function initializeAssociations() {
   Notification.belongsTo(User, { foreignKey: "recipient_id", as: "recipient" });
 
   // ---------------------------
+  // JobApplication → Notification (1:N)
+  // ---------------------------
+  JobApplication.hasMany(Notification, { foreignKey: "related_application_id", as: "notifications", onDelete: "CASCADE" });
+  Notification.belongsTo(JobApplication, { foreignKey: "related_application_id", as: "application" });
+
+  // ---------------------------
   // User ↔ Skill (M:N)
   // ---------------------------
   User.belongsToMany(Skill, { through: UserSkill, as: "skills", foreignKey: "user_id" });
