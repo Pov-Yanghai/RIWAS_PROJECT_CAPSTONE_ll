@@ -2,15 +2,22 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 import models
-from models import requ, user_profile
+from models import requ, user_profile, job_application, user_resume
 from schemas import Requ, RequCreate, UserProfile, UserProfileCreate
 from database import get_db, engine, Base
 from ml_engine import get_recommender
-
+from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI(
     title="AI-Based Job Recommendation System",
     description="Job recommendation system using BERT following Panchasara et al. (2023)",
     version="1.0.0"
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # create tables if not exist 
@@ -24,10 +31,14 @@ async def create_requ(requ_data: RequCreate, db: Session = Depends(get_db)):
     db.refresh(db_requ)
     return db_requ
 
+# @app.get("/requ/", response_model=List[Requ])
+# async def read_requ(db: Session = Depends(get_db)):
+#     requs = db.query(requ).all()
+#     return requs
 @app.get("/requ/", response_model=List[Requ])
 async def read_requ(db: Session = Depends(get_db)):
     requs = db.query(requ).all()
-    return requs
+    return [Requ.from_orm_model(r) for r in requs]
 
 @app.get("/requ/{job_id}", response_model=Requ)
 async def read_single_requ(job_id: int, db: Session = Depends(get_db)):
@@ -46,48 +57,85 @@ async def create_user_profile(profile_data: UserProfileCreate, db: Session = Dep
     return db_profile
 
 @app.get('/user_profile/{user_id}/recommendations')
-async def get_user_recommendations(user_id: int, top_n: int = 10, db: Session = Depends(get_db)):
-    """
-    Get AI-powered job recommendations for a specific user.
-    
-    This endpoint uses the new recommendation engine following the paper methodology:
-    - Preprocesses user profile and job data
-    - Generates embeddings using Sentence-BERT
-    - Calculates similarity scores (description + tags/skills)
-    - Returns top N ranked job recommendations
-    
-    Args:
-        user_id: User ID to get recommendations for
-        top_n: Number of recommendations to return (default: 10)
-        
-    Returns:
-        List of ranked job recommendations with similarity scores
-    """
-    # Get user profile from database
+async def get_user_recommendations(user_id: str, top_n: int = 10, db: Session = Depends(get_db)):
+
+    # Fetch user profile
     db_profile = db.query(user_profile).filter(user_profile.user_id == user_id).first()
-    if db_profile is None:
+    if not db_profile:
         raise HTTPException(status_code=404, detail="User profile not found")
-    
-    # Get all job requirements from database
-    requs = db.query(requ).all()
-    
-    if not requs:
-        raise HTTPException(status_code=404, detail="No job requirements found")
-    
-    # Get recommender instance
+
+    # Use profile 'about' as user text; if empty, fall back to latest resume extracted_text
+    user_text = db_profile.about or ""
+    if not user_text.strip():
+        latest_resume = (
+            db.query(user_resume)
+            .filter(user_resume.user_id == user_id)
+            .order_by(user_resume.uploaded_at.desc())
+            .first()
+        )
+        if latest_resume and latest_resume.extracted_text:
+            user_text = latest_resume.extracted_text
+
+    if not user_text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="No profile or resume text found. Please complete your profile or upload a resume."
+        )
+
+    # Fetch all published jobs
+    jobs = db.query(requ).filter(requ.status == "published").all()
+    if not jobs:
+        raise HTTPException(status_code=404, detail="No published job requirements found")
+
+    # Fetch job applications for this user that have ai_analysis
+    applications = db.query(job_application).filter(job_application.user_id == user_id).all()
+
+    # Build gemini_scores dict: { job_id (as str): matchScore }
+    import json, re
+    gemini_scores = {}
+    for app in applications:
+        if not app.ai_analysis or not isinstance(app.ai_analysis, dict):
+            continue
+
+        analysis = app.ai_analysis
+
+        # Handle old broken records: { "raw": "```json\n{...}\n```" }
+        # where Gemini markdown fences were not stripped before saving
+        if 'matchScore' not in analysis and 'raw' in analysis:
+            try:
+                raw_str = str(analysis['raw'])
+                cleaned = re.sub(r'^```(?:json)?\s*', '', raw_str, flags=re.IGNORECASE).rstrip('`').strip()
+                parsed = json.loads(cleaned)
+                if isinstance(parsed, dict):
+                    analysis = parsed
+            except Exception:
+                pass
+
+        try:
+            score = float(analysis.get('matchScore', 0.0))
+        except (ValueError, TypeError):
+            score = 0.0
+
+        gemini_scores[str(app.job_id)] = score
+
+    # Get recommendations from ML engine
     recommender = get_recommender()
-    
-    # Get recommendations using the new function
     recommendations = recommender.get_recommendations(
-        user_text=db_profile.about_me,
-        requs=requs,
-        top_n=top_n
+        user_text=user_text,
+        requs=jobs,
+        top_n=top_n,
+        gemini_scores=gemini_scores
     )
-    
+
     return {
         "user_id": user_id,
-        "user_profile": db_profile.about_me,
-        "total_jobs_analyzed": len(requs),
+        "user_profile": user_text,
+        "profile_source": "about" if db_profile.about and db_profile.about.strip() else "resume",
+        "total_jobs_analyzed": len(jobs),
+        "scoring_weights": {
+            "ml_engine": "40%" if gemini_scores else "100%",
+            "gemini_ai": "60%" if gemini_scores else "0% (no applications yet)"
+        },
         "recommendations": recommendations
     }
 
