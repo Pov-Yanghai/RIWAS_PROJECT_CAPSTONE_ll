@@ -180,7 +180,9 @@ body{font-family:'Roboto',sans-serif;}
 .sec-sub{font-size:10px;color:#94a3b8;margin-top:2px;}
 
 /* ── Dashboard containment ── */
-.dash-main{margin-left:227px;width:calc(100% - 227px);padding:24px 28px 56px;min-width:0;max-width:calc(100% - 227px);box-sizing:border-box;overflow-x:hidden;overflow-y:auto;}
+.dash-layout{display:flex;min-height:100vh;width:100%;}
+.dash-sidebar-spacer{width:227px;flex-shrink:0;}
+.dash-main{flex:1;min-width:0;padding:24px 28px 56px;box-sizing:border-box;overflow-x:hidden;overflow-y:auto;height:100vh;}
 .dash-main>.pf,.dash-main>.card{max-width:100%;overflow:hidden;}
 
 @media(max-width:1100px){
@@ -658,8 +660,9 @@ export default function RecruiterDashboard() {
         <JobModal job={jobModal === "new" ? null : jobModal} onClose={() => setJobModal(null)} onSave={handleSaveJob}/>
       )}
 
-      <div style={{ minHeight:"100vh", maxWidth:"100vw", background:"#F4F6FA", overflowX:"hidden", ...F }}>
+      <div style={{ minHeight:"100vh", background:"#F4F6FA", overflowX:"hidden", ...F }} className="dash-layout">
         <SideBar />
+        <div className="dash-sidebar-spacer" />
 
         <main className="dash-main">
 
