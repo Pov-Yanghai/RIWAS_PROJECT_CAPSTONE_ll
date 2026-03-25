@@ -1,8 +1,9 @@
-import { useState, React} from "react";
-import { NavLink } from "react-router-dom";
+import { useState, React } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import logo from '../assets/images/logo.png';
 import { FaTachometerAlt, FaBriefcase, FaClipboardList, FaUsers } from 'react-icons/fa';
 import { CgProfile } from "react-icons/cg";
+import { FiLogOut } from "react-icons/fi";
 let menuItems = [
   {
     path: '/profile-page',
@@ -33,6 +34,15 @@ let menuItems = [
 
 export function SideBar() {
   const [isOpen, setIsOpen] = useState(0);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    ["token", "accessToken", "refreshToken", "currentUser", "userId"].forEach((key) => {
+      localStorage.removeItem(key);
+    });
+    navigate("/login");
+  };
+
   return (
     <>
       {/* Header */}
@@ -60,6 +70,16 @@ export function SideBar() {
             ))}
           </ul>
         </nav>
+
+        <div className="absolute bottom-6 left-3 right-3">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors w-full"
+          >
+            <FiLogOut />
+            <span>Logout</span>
+          </button>
+        </div>
       </aside>
     </>
   );
