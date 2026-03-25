@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
+<<<<<<< HEAD
 import { useNavigate } from "react-router-dom";
+=======
+>>>>>>> repo2/Mengeang-branch
 import SideBar from "../../components/SideBar";
 import { getAllApplicationsForRecruiter } from "../../server/jobapplicationAPI";
 import {
@@ -83,7 +86,10 @@ const DeleteIcon = () => (
 
 /* ─── Main ───────────────────────────────────────────────────────────────────── */
 export default function MatrixPage() {
+<<<<<<< HEAD
   const navigate = useNavigate();
+=======
+>>>>>>> repo2/Mengeang-branch
 
   /* template */
   const [template,    setTemplate]    = useState(null);
@@ -342,6 +348,7 @@ export default function MatrixPage() {
       <main className="flex-1 ml-[227px] p-8">
 
         {/* Header */}
+<<<<<<< HEAD
         <div className="mb-8 flex items-start justify-between gap-4">
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-900">Scoring Matrix</h1>
@@ -353,6 +360,11 @@ export default function MatrixPage() {
           >
             Back
           </button>
+=======
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Scoring Matrix</h1>
+          <div className="mt-2 h-0.5 w-full bg-green-500 rounded" />
+>>>>>>> repo2/Mengeang-branch
         </div>
 
         {error   && <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl">{error}</div>}
@@ -455,6 +467,7 @@ export default function MatrixPage() {
       <main className="flex-1 ml-[227px] p-8">
 
         {/* Header */}
+<<<<<<< HEAD
         <div className="mb-8 flex items-start justify-between gap-4">
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-900">Scoring Matrix</h1>
@@ -466,6 +479,11 @@ export default function MatrixPage() {
           >
             Back
           </button>
+=======
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Scoring Matrix</h1>
+          <div className="mt-2 h-0.5 w-full bg-green-500 rounded" />
+>>>>>>> repo2/Mengeang-branch
         </div>
 
         {error   && <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl">{error}</div>}

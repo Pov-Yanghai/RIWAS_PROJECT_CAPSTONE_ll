@@ -29,8 +29,11 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [userId, setUserId] = useState("");
+<<<<<<< HEAD
   const [workflowStepCount, setWorkflowStepCount] = useState(null);
   const [matrixAttributeCount, setMatrixAttributeCount] = useState(null);
+=======
+>>>>>>> repo2/Mengeang-branch
 
   // Team members (HR users from the real API)
   const [teamMembers, setTeamMembers] = useState([]);
@@ -112,6 +115,7 @@ export default function ProfilePage() {
     loadTeam();
   }, []);
 
+<<<<<<< HEAD
   // Load workflow stage count from recruitment workflow definitions
   useEffect(() => {
     const loadWorkflowCount = async () => {
@@ -202,6 +206,38 @@ export default function ProfilePage() {
     }, 350);
   }, [searchQuery]);
 
+=======
+  // Search users
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await apiFetch(`/users?search=${encodeURIComponent(searchQuery)}&limit=8`);
+        const result = await res.json();
+        const users = Array.isArray(result) ? result : result?.data || result?.users || [];
+        setSearchResults(
+          users.map((u) => ({
+            id: u.id,
+            name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.name || u.email,
+            email: u.email,
+            role: u.role || "Recruiter",
+            avatarUrl: u.profilePicture || u.avatarUrl || "",
+          }))
+        );
+      } catch (e) {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 350);
+  }, [searchQuery]);
+
+>>>>>>> repo2/Mengeang-branch
   const handleSelectUser = (user) => {
     setSelectedUser(user);
     setSearchQuery(user.name || user.email);
@@ -366,9 +402,13 @@ export default function ProfilePage() {
                 </p>
                 <div className="flex gap-3">
                   <div className="h-10 flex-1 flex items-center px-3 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-700 font-medium">
+<<<<<<< HEAD
                     {workflowStepCount === null
                       ? "Loading process..."
                       : `${workflowStepCount} Step${workflowStepCount !== 1 ? "s" : ""} Process`}
+=======
+                    7 Steps Process
+>>>>>>> repo2/Mengeang-branch
                   </div>
                   <Link to="/recruitment-workflow" className={btnDark}>
                     Edit Process
@@ -381,9 +421,13 @@ export default function ProfilePage() {
                 </p>
                 <div className="flex gap-3">
                   <div className="h-10 flex-1 flex items-center px-3 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-700 font-medium">
+<<<<<<< HEAD
                     {matrixAttributeCount === null
                       ? "Loading matrix..."
                       : `${matrixAttributeCount} Attribute${matrixAttributeCount !== 1 ? "s" : ""} Matrix`}
+=======
+                    5 Steps Matrix
+>>>>>>> repo2/Mengeang-branch
                   </div>
                   <Link to="/matrix-page" className={btnDark}>
                     Edit Matrix
